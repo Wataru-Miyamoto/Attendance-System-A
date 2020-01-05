@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'bases/new'
+
   get 'attendances/update'
 
   get 'users/new'

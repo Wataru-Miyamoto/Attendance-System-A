@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'attendances/update'
+
   get 'users/new'
 
   root 'static_pages#top'

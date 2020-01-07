@@ -1,0 +1,45 @@
+<% provide(:title, 'All Users') %>
+<h1><%= @title %></h1>
+
+<div class="row container">
+  <div class="col-md-4 col-md-offset-8">
+    <p>ユーザー名検索</p>
+    <%= form_with(url: users_path, method: :get, local: true) do |f| %>
+      <%= f.text_field :search %>
+      <%= f.submit '検索', :name => nil %><%= link_to 'Clear', users_path, :search => nil %>
+    <% end %>
+  </div>
+</div>
+
+<div class="col-md-10 col-md-offset-1">
+  <%= will_paginate %>
+  <table class="table table-condensed table-hover" id="table-users">
+    <thead>
+      <tr>
+        <th><%= User.human_attribute_name :name %></th>
+        <th class="center"><%= User.human_attribute_name :department %></th>
+        <th></th>
+      </tr>
+    </thead>
+        
+    <% @user.each do |user| %>
+      <tr>
+        <td>
+          <% if current_user.admin? %>
+            <%= link_to user.name, user %>
+          <% else %>
+            <%= user.name %>
+          <% end %>
+        </td>
+        <td class="center"><%= user.department.present? ? user.department : "未所属" %></td>
+        <td class="center">
+          <% if current_user.admin? && !current_user?(user) %>
+            <%= link_to "削除", user, method: :delete,
+                data: { confirm:"削除してよろしいですか？" }, class: "btn btn-danger" %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+  <%= will_paginate %>
+</div>

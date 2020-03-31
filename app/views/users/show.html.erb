@@ -7,7 +7,8 @@
         <%= l(@first_day, format: :middle) %>　時間管理表
         <%= link_to "→", user_path(date: @first_day.next_month), class: "btn btn-primary" %>
       </td>
-      <td>指定勤務時間　<%= format_basic_info(@user.designated_work_start_time) %></td>
+      <td>指定勤務開始時間　<%= format_basic_info(@user.designated_work_start_time) %><br>
+          指定勤務終了時間　<%= format_basic_info(@user.designated_work_end_time) %></td>
       <td colspan="2">基本時間　<%= format_basic_info(@user.basic_time) %></td>
       <td>初日　<%= l(@first_day, format: :short) %></td>
     </tr>
@@ -22,9 +23,19 @@
   </table>
 </div>
 
+<div class="hover">
+  <% if current_user.superior? %>
+    <%= link_to "【所属長承認申請のお知らせ】", "#" %><br>
+    <%= link_to "【勤怠変更申請のお知らせ】", "#" %><br>
+    <%= link_to "【残業申請のお知らせ】", "#" %>
+  <% end %>
+</div>
+
 <div class="btn-users-show">
     
     <%= link_to "勤怠を編集", attendances_edit_one_month_user_path(date: @first_day), class: "btn btn-primary" %>
+    <%= link_to "CSV入力", "#", class: "btn btn-primary" %><br>
+    <%= link_to "勤怠修正ログ（承認済）", "#", class: "btn btn-primary" %>
     
 </div>
 
@@ -32,26 +43,40 @@
   <table class="table table-bordered table-condensed table-hover" id="table-attendances">
     <thead>
       <tr>
-        <th rowspan = "2">日付</th>
-        <th rowspan = "2">曜日</th>
-        <th colspan = "2">出社</th>
-        <th rowspan = "2">勤怠登録</th>
-        <th colspan = "2">退社</th>
+        <th rowspan = "3">残業申請</th>
+        <th rowspan = "3">日付</th>
+        <th rowspan = "3">曜日</th>
+        <th colspan = "7">【実績】</th>
+        <th colspan = "7">所定外勤務</th>
+
+      </tr>
+      <tr>
+        <th colspan = "3">出社</th>
+        <th colspan = "3">退社</th>
         <th rowspan = "2">在社時間</th>
         <th rowspan = "2">備考</th>
+        <th colspan = "3">終了予定時間</th>
+        <th rowspan = "2">時間外時間</th>
+        <th rowspan = "2">業務処理内容</th>
+        <th rowspan = "2">指示者確認印</th>
       </tr>
       <tr>
         <th>時</th>
         <th>分</th>
+        <th></th>
         <th>時</th>
         <th>分</th>
+        <th></th>
+        <th>時</th>
+        <th>分</th>
+        <th></th>
       </tr>
     </thead>
 
     <tbody>
       <% (@attendances).each do |day| %>
         <tr>
-        
+          <td><%= link_to "残業申請", "#", class: "btn btn-primary" %></td>
           <td><%= l(day.worked_on, format: :short) %></td>
           
           <td>
@@ -82,6 +107,13 @@
             <% end %>
           </td>
           <td><%= day.note %></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
         </tr>
       <% end %>
     </tbody>
@@ -89,15 +121,19 @@
     <tfoot>
       <!--rowspan:縦結合、colspan：横結合-->
       <tr>
-        <td colspan="2">累計日数</td>
-        <td colspan="3">総合勤務時間</td>
-        <td colspan="3">累計在社時間</td>
-        <td rowspan="2"></td>
-      </tr>
-      <tr>
-        <td colspan="2"><%= @attendances.count %></td>
-        <td colspan="3"><%= format_basic_info(@user.designated_work_start_time).to_f * @worked_sum %></td>
-        <td colspan="3"><%= format("%.2f", @total_working_times.to_f) %></td>
+        <td></td>
+        <td colspan="2"></td>
+        <td colspan="6"></td>
+        <td><%= format("%.2f", @total_working_times.to_f) %></td>
+        <td colspan="6"></td>
+        <td>所属長承認　未<br>
+          <button class="btn btn-block dropdown-toggle" type="button" id="dropdownMenu1" 
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                  
+            <span class="caret"></span><br>
+          </button>
+          <%= link_to "申請", "#", class: "btn  btn-block btn-primary" %>
+        </td>
       </tr>
     </tfoot>    
   </table>

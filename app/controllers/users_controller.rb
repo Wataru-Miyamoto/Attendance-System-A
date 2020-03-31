@@ -2,18 +2,34 @@ class UsersController < ApplicationController
   before_action :set_user, only: [:show, :edit, :update, :destroy, :edit_basic_info, :update_basic_info]
   before_action :logged_in_user, only: [:index, :edit, :update, :destroy, :edit_basic_info, :update_basic_info]
   before_action :correct_user, only: [:edit, :update]
+  before_action :superior_user, only: [:edit, :update]
   before_action :admin_user, only: [:index, :destroy, :edit_basic_info, :update_basic_info]
   before_action :admin_or_correct_user, only: [:show, :edit, :update]
   before_action :set_one_month, only: :show
   
   def index
-    @user = User.search(params[:search])
-    @title = "ユーザー一覧"
-      if params.has_key?(:search)
-        @title = "検索結果"
+   @users = User.all
+    respond_to do |format|
+      format.html do
+          #html用の処理を書く
+      end 
+      format.csv do
+          #csv用の処理を書く
+          send_data render_to_string, filename: "(ファイル名).csv", type: :csv
       end
-    @users = User.paginate(page: params[:page])
+    end
+   if params[:search]
+      @user = User.where('LOWER(name) LIKE ?', "%#{params[:search][:name].downcase}%").paginate(page: params[:page])
+   else
+      @user = User.paginate(page: params[:page])
+   end
   end
+
+  def import
+    User.import(params[:file])
+    redirect_to root_url
+  end
+
   
   def show
     @worked_sum = @attendances.where.not(started_at: nil).count
@@ -70,7 +86,7 @@ class UsersController < ApplicationController
   private
 
     def user_params
-      params.require(:user).permit(:name, :email, :affiliation, :password, :password_confirmation, :search)
+      params.require(:user).permit(:name, :email, :affiliation, :password, :password_confirmation)
     end
     
     def basic_info_params

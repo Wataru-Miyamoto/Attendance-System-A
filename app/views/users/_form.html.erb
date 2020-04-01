@@ -10,11 +10,23 @@
   <%= f.label "所属", class: "label-#{yield(:class_text)}" %>
   <%= f.text_field :affiliation, class: "form-control" %>
   
+  <%= f.label "社員番号", class: "label-#{yield(:class_text)}" %>
+  <%= f.text_field :employee_number, class: "form-control" %>
+  
+  <%= f.label "カードID", class: "label-#{yield(:class_text)}" %>
+  <%= f.text_field :uid, class: "form-control" %>
+  
   <%= f.label "パスワード", class: "label-#{yield(:class_text)}" %>
   <%= f.password_field :password, class: "form-control" %>
   
-  <%= f.label "パスワード再入力", class: "label-#{yield(:class_text)}" %>
-  <%= f.password_field :password_confirmation, class: "form-control" %>
+  <%= f.label "基本勤務時間", class: "label-#{yield(:class_text)}" %>
+  <%= f.password_field :basic_time, class: "form-control" %>
+  
+  <%= f.label "指定勤務開始時間", class: "label-#{yield(:class_text)}" %>
+  <%= f.password_field :designated_work_start_time, class: "form-control" %>
+  
+  <%= f.label "指定勤務終了時間", class: "label-#{yield(:class_text)}" %>
+  <%= f.password_field :designated_work_end_time, class: "form-control" %>
   
   <%= f.submit "更新", class: "btn btn-primary btn-block btn-signup btn-#{yield(:button_text)}" %>
 <% end %>

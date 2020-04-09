@@ -80,6 +80,11 @@ class UsersController < ApplicationController
           flash[:danger] = "更新が失敗しました。<br>" + @user.errors.full_messages.join("<br>")
         end
       end
+    redirect_to @users
+  end
+  
+  def import
+    User.import(params[:file])
     redirect_to users_url
   end
 

@@ -1,20 +1,32 @@
-<%= form_with(model: @user, local: true) do |f| %>
-  <%= render 'shared/error_messages', object: @user %>
-  
-  <%= f.label :name, class: "label-#{yield(:class_text)}" %>
+<%= form_with(xml: @users, local: true) do |f| %>
+  <%= render 'shared/error_messages', object: @users %>
+
+  <%= f.label "名前", class: "label-#{yield(:class_text)}" %>
   <%= f.text_field :name, class: "form-control" %>
   
-  <%= f.label :email, class: "label-#{yield(:class_text)}" %>
+  <%= f.label "メールアドレス", class: "label-#{yield(:class_text)}" %>
   <%= f.email_field :email, class: "form-control" %>
   
-  <%= f.label :affiliation, class: "label-#{yield(:class_text)}" %>
+  <%= f.label "所属", class: "label-#{yield(:class_text)}" %>
   <%= f.text_field :affiliation, class: "form-control" %>
   
-  <%= f.label :password, class: "label-#{yield(:class_text)}" %>
+  <%= f.label "社員番号", class: "label-#{yield(:class_text)}" %>
+  <%= f.text_field :employee_number, class: "form-control" %>
+  
+  <%= f.label "カードID", class: "label-#{yield(:class_text)}" %>
+  <%= f.text_field :uid, class: "form-control" %>
+  
+  <%= f.label "パスワード", class: "label-#{yield(:class_text)}" %>
   <%= f.password_field :password, class: "form-control" %>
   
-  <%= f.label :password_confirmation, class: "label-#{yield(:class_text)}" %>
-  <%= f.password_field :password_confirmation, class: "form-control" %>
+  <%= f.label "基本勤務時間", class: "label-#{yield(:class_text)}" %>
+  <%= f.password_field :basic_time, class: "form-control" %>
   
-  <%= f.submit yield(:button_text), class: "btn btn-primary btn-block btn-signup btn-#{yield(:button_text)}" %>
+  <%= f.label "指定勤務開始時間", class: "label-#{yield(:class_text)}" %>
+  <%= f.password_field :designated_work_start_time, class: "form-control" %>
+  
+  <%= f.label "指定勤務終了時間", class: "label-#{yield(:class_text)}" %>
+  <%= f.password_field :designated_work_end_time, class: "form-control" %>
+  
+  <%= f.submit "更新", class: "btn btn-primary btn-block btn-signup btn-#{yield(:button_text)}" %>
 <% end %>

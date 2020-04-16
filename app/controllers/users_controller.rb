@@ -27,7 +27,7 @@ class UsersController < ApplicationController
 
   def import
     User.import(params[:file])
-    redirect_to root_url
+    redirect_to users_url
   end
 
   
@@ -83,9 +83,7 @@ class UsersController < ApplicationController
     redirect_to @users
   end
   
-  def import
-    User.import(params[:file])
-    redirect_to users_url
+  def working_employee
   end
 
   private

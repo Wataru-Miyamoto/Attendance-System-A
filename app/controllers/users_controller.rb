@@ -84,6 +84,7 @@ class UsersController < ApplicationController
   end
   
   def working_employee
+    @users = User.all.includes(:attendances)
   end
 
   private

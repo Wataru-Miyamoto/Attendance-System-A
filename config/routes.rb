@@ -23,8 +23,10 @@ Rails.application.routes.draw do
       get   'working_employee'
       get   'attendances/edit_one_month'
       patch 'attendances/update_one_month'
-      
+      get 'search'
     end
     resources :attendances, only: :update
+    end
+    resources :bases do
   end
 end

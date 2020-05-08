@@ -132,7 +132,34 @@
                   
             <span class="caret"></span><br>
           </button>
-          <%= link_to "申請", "#", class: "btn  btn-block btn-primary" %>
+          <!--<%= link_to "申請", "#", class: "btn  btn-block btn-primary" %>-->
+          
+          <%= form_with model: @user, url: update_month_path(@user.id), method: :patch do |f| %>
+            <% @date.each do |day| %>
+              <%= fields_for "attendances[]", day do |af| %>
+                <div class="form-group">
+                  <% if @user.id == current_user.id %>
+                    <!--一つ目id: value, 二つ目name: 表示用-->
+                    <!--申請先上長のid(superior_id)を選択-->
+                    <%= af.collection_select :superior_id, User.where(superior: true).where.not(id: current_user.id), :id, :name, {:include_blank => true}, {class: "form-control"} %>
+                    <!--申請月の@first_dayを自動で渡す-->
+                    <%= af.hidden_field :apply_month, :value => @first_day %>
+                    <!--裏側でmonth_approval == "申請中"を渡したい-->
+                    <%= af.hidden_field :month_approval, {value: "申請中"} %>
+                    <!--裏側でmonth_check == falseにしたい-->
+                    <% af.hidden_field :month_check, :value => "0" %>
+                    <% raise %>
+                  <% end %>
+                </div>
+              <% end %>
+              <% break %>
+            <% end %>
+            <div class="btn-attendances-center">
+              <% if @user.id == current_user.id %>
+                <%= f.submit "申請", class: "btn btn-primary" %>
+              <% end %>
+            </div>
+          <% end %>
         </td>
       </tr>
     </tfoot>    

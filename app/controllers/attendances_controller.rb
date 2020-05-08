@@ -45,6 +45,21 @@ class AttendancesController < ApplicationController
   def index_log
   end
   
+  def update_month
+	# params[:user][:apply_month] = @first_day /申請先上長が選択されているか確認
+    if superior_present?
+	  # idはAttendanceモデルオブジェクトのid、itemは各カラムの値が入った更新するための情報
+      update_month_params.each do |id, item| 
+        # 更新するべきAttendanceモデルオブジェクトを探してattendanceに代入
+        attendance = Attendance.find(id)
+        attendance.update_attributes(item)
+      end
+      flash[:success] = "所属長申請しました。"
+      redirect_to @user
+    end
+  end
+  
+  
   private
   
     def attendances_params
@@ -57,5 +72,10 @@ class AttendancesController < ApplicationController
         flash[:danger] = "アクセス権限がありません。"
         redirect_to(root_url)
       end
+    end
+    
+    # 申請した上長idと申請月
+    def update_month_params
+    	params.permit(attendances: [:superior_id, :apply_month, :month_approval, :month_check])[:attendances]
     end
 end

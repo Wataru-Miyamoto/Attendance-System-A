@@ -17,6 +17,9 @@ class User < ApplicationRecord
   has_secure_password
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
   
+  # 追加　どこからでもUser.sperior_usersが呼び出せる。
+  scope :sperior_users, -> { where(sperior: true)}
+  
   def User.digest(string)
     cost =
       if ActiveModel::SecurePassword.min_cost

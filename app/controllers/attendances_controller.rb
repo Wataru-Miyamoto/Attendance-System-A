@@ -45,17 +45,58 @@ class AttendancesController < ApplicationController
   def index_log
   end
   
-  def update_month
-	# params[:user][:apply_month] = @first_day /申請先上長が選択されているか確認
-    if superior_present?
-	  # idはAttendanceモデルオブジェクトのid、itemは各カラムの値が入った更新するための情報
-      update_month_params.each do |id, item| 
-        # 更新するべきAttendanceモデルオブジェクトを探してattendanceに代入
-        attendance = Attendance.find(id)
-        attendance.update_attributes(item)
+  #一ヶ月分の勤怠申請
+  def monthly_confirmation
+    @first_day = params[:year_month]
+    #datetimeに変換
+    @first_day = @first_day.to_datetime
+    @last_day = @first_day.end_of_month
+    #パラメーターでユーザーの名前を検索してidを入れる
+    _id = User.where(name: params[:user][:name]).first.id
+    #一ヶ月分の勤怠検索して上長IDとステータスの申請して保存する
+    Attendance.where('attendance_date >= ? and attendance_date <= ?', @first_day-1.minute, @last_day).update_all(:monthly_confirmation_approver_id => _id, :monthly_confirmation_status => :pending)
+  end
+  
+    #上長承認モーダル画面・ユーザーからの1ヶ月分勤怠
+  def monthly_confirmation_form
+    #未承認かつidがcurrent_user
+    @attendances = Attendance.where(monthly_confirmation_status: :pending, monthly_confirmation_approver_id: current_user.id)
+    #ユーザー（user_id)ごとに勤怠のオブジェクトを分ける
+    tmp_pending_users = @attendances.group_by(&:user_id)
+    #未承認のユーザーの名前と、何月分の一ヶ月勤怠申請なのか
+    @pending_users = {}
+    tmp_pending_users.each do |user_id, attendances|
+      year_month_arr = []
+      attendances.each do |attendance|
+        year_month_arr << attendance.attendance_date.year.to_s + attendance.attendance_date.month.to_s
       end
-      flash[:success] = "所属長申請しました。"
-      redirect_to @user
+      year_month_arr.uniq
+      @pending_users.store(User.find(user_id).name, year_month_arr.uniq)
+    end
+  end
+  
+  def update_overtime
+    #todo
+    @attendance = Attendance.find(params[:id])
+    
+    tmp_date = @attendance.attendance_date
+    tmp_hour = params[:attendance][:overtime].split(":")[0].to_i
+    tmp_min = params[:attendance][:overtime].split(":")[1].to_i
+    @attendance.overtime = tmp_date + tmp_hour.hour + tmp_min.minute
+    
+    #チェックボックスはifで分岐だけでデータベースには入れない
+    if params[:overday_check]
+      @attendance.overtime = @attendance.overtime + 1.day
+    end 
+    
+    @attendance.user_id = current_user.id
+    #指示者確認・パラメーターでユーザーの名前を検索してidを入れる
+    @attendance.overwork_approver_id = User.where(name: params[:user][:name]).first.id
+    @attendance.task_memo = params[:attendance][:task_memo]
+    if @attendance.save
+      redirect_to attendances_path, notice: '残業申請を送付しました。' 
+    else
+      redirect_to attendances_path, notice: '残業申請は失敗しました。' 
     end
   end
   

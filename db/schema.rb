@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20200108055428) do
+ActiveRecord::Schema.define(version: 20200509015411) do
+
+  create_table "attendance_logs", force: :cascade do |t|
+    t.date "attendance_date"
+    t.datetime "started_at_before_update"
+    t.datetime "finished_at_before_update"
+    t.datetime "started_at_after_update"
+    t.datetime "finished_at_after_update"
+    t.integer "change_confirmation_approver_id"
+    t.date "approval_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "attendances", force: :cascade do |t|
     t.date "worked_on"
@@ -20,6 +32,15 @@ ActiveRecord::Schema.define(version: 20200108055428) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.date "attendance_date"
+    t.datetime "overtime"
+    t.text "task_memo"
+    t.integer "change_confirmation_approver_id"
+    t.integer "change_confirmation_status"
+    t.integer "overwork_approver_id"
+    t.integer "overwork_status"
+    t.integer "monthly_confirmation_approver_id"
+    t.integer "monthly_confirmation_status"
     t.index ["user_id"], name: "index_attendances_on_user_id"
   end
 
@@ -45,9 +66,9 @@ ActiveRecord::Schema.define(version: 20200108055428) do
     t.string "remember_digest"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.datetime "basic_time", default: "2020-01-22 23:00:00"
-    t.datetime "designated_work_start_time", default: "2020-01-23 00:00:00"
-    t.datetime "designated_work_end_time", default: "2020-01-23 09:00:00"
+    t.datetime "basic_time", default: "2020-05-08 23:00:00"
+    t.datetime "designated_work_start_time", default: "2020-05-09 00:00:00"
+    t.datetime "designated_work_end_time", default: "2020-05-09 09:00:00"
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 

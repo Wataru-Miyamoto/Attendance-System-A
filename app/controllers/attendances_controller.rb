@@ -55,6 +55,8 @@ class AttendancesController < ApplicationController
     _id = User.where(name: params[:user][:name]).first.id
     #一ヶ月分の勤怠検索して上長IDとステータスの申請して保存する
     Attendance.where('attendance_date >= ? and attendance_date <= ?', @first_day-1.minute, @last_day).update_all(:monthly_confirmation_approver_id => _id, :monthly_confirmation_status => :pending)
+    # 上長画面で一ヶ月分勤怠申請のお知らせをカウントする
+    @monthly_confirmation_count = Attendance.monthly_confirmation(current_user)
   end
   
     #上長承認モーダル画面・ユーザーからの1ヶ月分勤怠
@@ -116,7 +118,7 @@ class AttendancesController < ApplicationController
     end
     
     # 申請した上長idと申請月
-    def update_month_params
+    def monthly_confirmation_params
     	params.permit(attendances: [:superior_id, :apply_month, :month_approval, :month_check])[:attendances]
     end
 end

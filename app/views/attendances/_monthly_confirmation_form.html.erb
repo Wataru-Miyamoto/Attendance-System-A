@@ -1,0 +1,42 @@
+<div class="modal-dialog">
+  <div class="modal-content">
+    <div class="monthly_confirmation_form">
+    <%= @attendances.count %>
+    <% @pending_users.each do |user_name, attendances| %>
+      <h1><%= user_name %>からの１ヶ月分勤怠申請</h1>
+      <%= user_name %>
+      <%= attendances %>
+    <% end %>
+    
+      <% if false %>
+        <%= form_tag(@attendances, remote: true) do |f| %>
+          <table class = "table-bordered table-striped table-condensed">
+            <thead>
+              <thead>
+                <tr>
+                  <th width = "10%">月</th>
+                  <th width = "20%">指示者確認（印）</th>
+                  <th width = "10%">変更</th>
+                  <th width = "30%">勤怠を確認する</th>
+                </tr>
+              </thead>
+            </thead>
+            <tbody>
+              <tr>
+                <!--月-->
+                <td class = "attendance_date"><%= f.object.attendance_date.month %>/<%= f.object.attendance_date.day %></td>
+                <!--指示者確認（印)--> { nothing: 0, pending: 1, approval: 2, denial: 3 }
+                <td><%= select :attendance, :name, @superiors, :prompt => "選択してください" %></td>
+                <!--変更のチェックボックス、チェックがないと変更しても反映されない-->
+              　<td><%= check_box_tag :overday_check %></td>
+                <!--勤怠を確認するボタン-->
+                <td><%= link_to "確認", edit_attendance_path(attendance), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %></td>
+              </tr>
+            </tbody>
+          </table>
+          <%= f.submit "変更を送信する", class: "btn btn-primary btn-sm" %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -14,6 +14,16 @@ Rails.application.routes.draw do
   post    '/login', to: 'sessions#create'
   delete  '/logout', to: 'sessions#destroy'
   
+  #上長画面一ヶ月分勤怠申請のお知らせフォーム
+  get  '/monthly_confirmation_form',    to: 'attendances#monthly_confirmation_form'
+  post  '/monthly_confirmation_form',    to: 'attendances#monthly_confirmation_form'
+  
+  #一ヶ月分の申請
+  patch  '/monthly_confirmation',    to: 'attendances#monthly_confirmation'
+  
+  #勤怠修正ログ
+  resources :attendance_logs
+  
   
   resources :users do
     collection {post :import}
@@ -23,10 +33,6 @@ Rails.application.routes.draw do
       get   'working_employee'
       get   'attendances/edit_one_month'
       patch 'attendances/update_one_month'
-      get   'attendances/index_log'
-      get   'attendances/edit_log'
-      post  'attendances/create_log'
-      patch 'attendances/update_log'
       get 'search'
     end
     resources :attendances, only: :update

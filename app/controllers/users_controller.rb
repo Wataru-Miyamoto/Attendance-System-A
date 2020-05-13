@@ -33,6 +33,7 @@ class UsersController < ApplicationController
   
   def show
     @worked_sum = @attendances.where.not(started_at: nil).count
+    @superiors = User.where(superior: true).map(&:name)
   end
 
   def new

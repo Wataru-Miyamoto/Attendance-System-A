@@ -1,3 +1,21 @@
 // Place all the styles related to the Attendances controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+.table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.actions {
+    float:left;
+	padding-bottom:20px;  
+}
+
+#overwork-form-modal > div > div > div {
+    margin: 20px;
+}
+
+#new_attendance > input.btn.btn-primary {
+    width:30%;
+}

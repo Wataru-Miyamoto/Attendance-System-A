@@ -57,4 +57,28 @@ class ApplicationController < ActionController::Base
     flash[:danger] = "ページ情報の取得に失敗しました、再アクセスしてください。"
     redirect_to root_url
   end
+  
+  def create_attendance_date
+    # 既に表示月があれば、表示月を取得する
+    if !params[:first_day].nil?
+      @first_day = Date.parse(params[:first_day])
+    else
+      # 表示月が無ければ、今月分を表示
+      @first_day = Date.new(Date.today.year, Date.today.month, 1)
+    end
+    # 最終日を取得する
+    @last_day = @first_day.end_of_month
+    # 今月の初日から最終日の期間分を取得
+    (@first_day..@last_day).each do |date|
+      # 該当日付のデータがないなら作成する
+      #(例)user1に対して、今月の初日から最終日の値を取得する
+      if !@user.attendances.where('attendance_date = ?', date).present? #{|attendance| attendance.attendance_date == date }
+        linked_attendance = Attendance.new(user_id: @user.id, attendance_date: date)
+        linked_attendance.save
+      end
+    end
+    # 表示期間の勤怠データを日付順にソートして取得 show.html.erb、 <% @attendances.each do |attendance| %>からの情報
+    @attendances = @user.attendances.where('attendance_date >= ? and attendance_date <= ?', @first_day, @last_day).order("attendance_date ASC")
+  end
+  
 end

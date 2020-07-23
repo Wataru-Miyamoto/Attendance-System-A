@@ -26,11 +26,20 @@
 <div class="hover">
   <!--上長で（自分かどうか）&未承認だったら申請のお知らせの表示・未承認のものがあれば文字は赤色-->
   <% if current_user.superior? %>
-    <%= link_to "【所属長承認申請のお知らせ】", monthly_confirmation_form_path, remote: true %><br>
-      <div id="monthly-confirmation-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
-      <!-- 所属長承認の件数をカウントする-->
-      <%= @monthly_confirmation_count %>
-
+    <% unless @monthly_confirmation_count == nil %>
+      <% if @monthly_confirmation_count > 0 %>
+        <div class="border border-danger text text-danger">
+          <%= link_to "【所属長承認申請のお知らせ】", attendances_monthly_confirmation_form_user_path(@user), remote: true, class: 'text text-danger' %>
+            <div id="monthly-confirmation-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+  
+          <!-- 所属長承認の件数をカウントする-->
+            <%= @monthly_confirmation_count %>件のお知らせがあります
+  
+        </div>
+      <% else %>
+        <p>【所属長承認申請のお知らせ】</p><br>
+      <% end %>
+    <% end %>
     <%= link_to "【勤怠変更申請のお知らせ】", "#" %><br>
     <%= link_to "【残業申請のお知らせ】", "#" %>
   <% end %>
@@ -39,8 +48,8 @@
 <div class="btn-users-show">
     
     <%= link_to "勤怠を編集", attendances_edit_one_month_user_path(date: @first_day), class: "btn btn-primary" %>
-    <%= link_to "CSV入力", "#", class: "btn btn-primary" %><br>
-    <%= link_to "勤怠修正ログ（承認済）", attendance_logs_path(@attendance, params: { id: @user.id, first_day: @first_day }), :style=>"color:white;", class: "btn btn-primary btn-sm" %>
+    <%= link_to "CSV出力", "#", class: "btn btn-primary" %><br>
+    <%= link_to "勤怠修正ログ（承認済）", attendance_logs_path(@attendance, params: {id: @user.id, first_day: @first_day}), :style=>"color:white;", class: "btn btn-primary btn-sm" %>
     
 </div>
 
@@ -81,7 +90,8 @@
     <tbody>
       <% (@attendances).each do |day| %>
         <tr>
-          <td><%= link_to "残業申請", "#", class: "btn btn-primary" %></td>
+          <td><%= link_to "残業申請", attendances_update_overtime_form_user_path(@user), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %>
+            <div id="overwork-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div></td>
           <td><%= l(day.worked_on, format: :short) %></td>
           
           <td>
@@ -131,10 +141,11 @@
         <td colspan="6"></td>
         <td><%= format("%.2f", @total_working_times.to_f) %></td>
         <td colspan="6"></td>
-        <td class="table-body">所属長承認
-          <%= form_tag(monthly_confirmation_path, method: :patch) do %>
+        <td class="table-body">所属長承認　未
+          <%= form_with url: attendances_monthly_confirmation_user_path(@user), method: :patch do %>
             <%= select :user, :name, @superiors, :prompt => "選択してください" %>
-            <%= hidden_field_tag :year_month, @first_day %>
+            <%= hidden_field_tag :date, @first_day %>
+            <%= hidden_field_tag :user_id, @user.id %>
             <%= submit_tag("申請", class: "btn btn-primary btn-block btn-sm")%>
           <% end %>
         </td>

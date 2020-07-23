@@ -42,25 +42,25 @@ class AttendancesController < ApplicationController
     redirect_to attendances_edit_one_month_user_url(date: params[:date])
   end
   
-  def index_log
-  end
-  
   #一ヶ月分の勤怠申請
   def monthly_confirmation
-    @first_day = params[:year_month]
-    #datetimeに変換
-    @first_day = @first_day.to_datetime
-    @last_day = @first_day.end_of_month
+    @user = User.find(params[:user_id])
     #パラメーターでユーザーの名前を検索してidを入れる
     _id = User.where(name: params[:user][:name]).first.id
     #一ヶ月分の勤怠検索して上長IDとステータスの申請して保存する
-    Attendance.where('attendance_date >= ? and attendance_date <= ?', @first_day-1.minute, @last_day).update_all(:monthly_confirmation_approver_id => _id, :monthly_confirmation_status => :pending)
-    # 上長画面で一ヶ月分勤怠申請のお知らせをカウントする
-    @monthly_confirmation_count = Attendance.monthly_confirmation(current_user)
+    @attendance = @user.attendances.find_by(worked_on: params[:date])
+    @attendance.update_attributes(:monthly_confirmation_approver_id => _id, :monthly_confirmation_status => :pending)
+    flash[:success] = "1ヶ月分の勤怠申請を送信しました。"
+    redirect_to user_url(current_user)
   end
   
     #上長承認モーダル画面・ユーザーからの1ヶ月分勤怠
   def monthly_confirmation_form
+    @user = User.find(params[:id])
+    @attendance_date = Attendance.where(attendance_date: current_user.id)
+    @first_day = params[:date].nil? ?
+    Date.current.beginning_of_month : params[:date].to_date
+    @superiors = User && User.where(superior: true).where.not(id: current_user.id).map(&:name)
     #未承認かつidがcurrent_user
     @attendances = Attendance.where(monthly_confirmation_status: :pending, monthly_confirmation_approver_id: current_user.id)
     #ユーザー（user_id)ごとに勤怠のオブジェクトを分ける
@@ -70,11 +70,24 @@ class AttendancesController < ApplicationController
     tmp_pending_users.each do |user_id, attendances|
       year_month_arr = []
       attendances.each do |attendance|
-        year_month_arr << attendance.attendance_date.year.to_s + attendance.attendance_date.month.to_s
+        year_month_arr << attendance.attendance_date.to_s
       end
       year_month_arr.uniq
       @pending_users.store(User.find(user_id).name, year_month_arr.uniq)
     end
+  end
+  
+  def monthly_update
+    p params
+    ActiveRecord::Base.transaction do
+      monthly_update_params.each do |id, item|
+        attendance = Attendance.find(id)
+        item[:monthly_confirmation_status] = item[:monthly_confirmation_status].to_i
+        attendance.update_attributes!(item) if item[:overday_check] == "1"
+      end
+    end
+    flash[:info] = "1ヶ月分の勤怠申請を更新処理しました。ご確認ください。"
+    redirect_to user_url(current_user.id)
   end
   
   def update_overtime
@@ -87,7 +100,7 @@ class AttendancesController < ApplicationController
     @attendance.overtime = tmp_date + tmp_hour.hour + tmp_min.minute
     
     #チェックボックスはifで分岐だけでデータベースには入れない
-    if params[:overday_check]
+    if params[:overtime]
       @attendance.overtime = @attendance.overtime + 1.day
     end 
     
@@ -102,11 +115,22 @@ class AttendancesController < ApplicationController
     end
   end
   
+  def update_overtime_form
+    @attendance = Attendance.find(params[:id])
+    @superiors = User.where(superior: true).where.not(id: current_user.id).map(&:name)
+    @youbi = %w[日 月 火 水 木 金 土]
+  end
+  
   
   private
   
     def attendances_params
       params.require(:user).permit(attendances: [:started_at, :finished_at, :note])[:attendances]
+    end
+    
+    def monthly_update_params
+      #debugger
+      params.require(:user).permit(attendances: [:monthly_confirmation_status, :overday_check]).merge(user_id: params[:id])[:attendances]
     end
     
     def admin_or_correct_user
@@ -117,8 +141,4 @@ class AttendancesController < ApplicationController
       end
     end
     
-    # 申請した上長idと申請月
-    def monthly_confirmation_params
-    	params.permit(attendances: [:superior_id, :apply_month, :month_approval, :month_check])[:attendances]
-    end
 end

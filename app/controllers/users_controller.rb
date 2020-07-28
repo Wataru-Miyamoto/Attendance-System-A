@@ -4,7 +4,7 @@ class UsersController < ApplicationController
   before_action :correct_user, only: [:edit, :update]
   before_action :superior_user, only: [:edit, :update]
   before_action :admin_user, only: [:index, :destroy, :edit_basic_info, :update_basic_info]
-  before_action :admin_or_correct_user, only: [:show, :edit, :update]
+  before_action :admin_or_correct_user, only: [:edit, :update]
   before_action :set_one_month, only: :show
   
   def index
@@ -33,6 +33,12 @@ class UsersController < ApplicationController
   
   def show
     @worked_sum = @attendances.where.not(started_at: nil).count
+    @superiors = User && User.where(superior: true).where.not(id: current_user.id).map(&:name)
+    # 上長画面で一ヶ月分勤怠申請のお知らせをカウントする
+    if @user.superior == true
+      @monthly_confirmation_count = Attendance.where(monthly_confirmation_approver_id: @user.id, monthly_confirmation_status: "pending").count
+    end
+    @approver = User && User.where(superior: true).where.not(id: current_user.id) && Attendance.where(monthly_confirmation_status: "approval")
   end
 
   def new

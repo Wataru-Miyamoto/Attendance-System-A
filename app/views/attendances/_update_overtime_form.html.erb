@@ -1,0 +1,40 @@
+<div class="modal-dialog">
+  <div class="modal-content">
+    <h1>残業申請</h1>
+    <div class="update_overtime_form">
+      <%= form_for(@attendance, remote: true) do |f| %>
+        <table class = "table-bordered table-striped table-condensed">
+          <thead>
+            <thead>
+              <tr>
+                <th width = "10%">日付</th>
+                <th width = "10%">曜日</th>
+                <th width = "20%">終了予定時間</th>
+                <th width = "10%">翌日</th>
+                <th width = "30%">業務処理内容</th>
+                <th width = "20%">指示者確認（印）</th>
+              </tr>
+            </thead>
+          </thead>
+          <tbody>
+            <tr>
+              <!--日付-->
+              <td class = "attendance_date"><%= f.object.attendance_date.month %>/<%= f.object.attendance_date.day %></td>
+              <!--曜日-->
+              <td class = "attendance_date"><%= @youbi[f.object.attendance_date.wday] %></td>
+              <!--終了予定時間-->
+              <td><%= f.time_field :overtime %></td>
+              <!--翌日のチェックボックス-->
+            　<td><%= check_box_tag :overday_check %></td>
+              <!--業務処理内容-->
+              <td><%= f.text_field :task_memo %></td>
+              <!--指示者確認（印)-->
+              <td><%= select :user, :name, @speriors,  :prompt => "選択してください" %></td>
+            </tr>
+          </tbody>
+        </table>
+        <%= f.submit "変更を送信する", class: "btn btn-primary btn-sm" %>
+      <% end %>
+    </div>
+  </div>
+</div>

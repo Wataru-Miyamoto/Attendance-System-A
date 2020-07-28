@@ -1,0 +1,19 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  attendance_date: 2020-05-09
+  started_at_before_update: 2020-05-09 01:35:26
+  finished_at_before_update: 2020-05-09 01:35:26
+  started_at_after_update: 2020-05-09 01:35:26
+  finished_at_after_update: 2020-05-09 01:35:26
+  change_confirmation_approver_id: 1
+  approval_date: 2020-05-09
+
+two:
+  attendance_date: 2020-05-09
+  started_at_before_update: 2020-05-09 01:35:26
+  finished_at_before_update: 2020-05-09 01:35:26
+  started_at_after_update: 2020-05-09 01:35:26
+  finished_at_after_update: 2020-05-09 01:35:26
+  change_confirmation_approver_id: 1
+  approval_date: 2020-05-09

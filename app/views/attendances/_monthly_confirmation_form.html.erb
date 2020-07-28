@@ -1,0 +1,46 @@
+<div class="modal-dialog modal-lg">
+  <div class="modal-content">
+    <div class="monthly_confirmation_form">
+      <div id="black">
+      <%= @attendances.count %>
+        
+        <% @pending_users.each do |user_name, attendance| %>
+          <h1><%= user_name %>からの１ヶ月分勤怠申請</h1>
+          
+          <%= form_with model: @user, url: attendances_monthly_update_user_path, local: true, method: :patch do |f| %>
+            <% @attendances.each do |a| %>
+            <%= f.fields_for "attendances[]", a do |attendances| %>
+              <table class = "table table-bordered table-condensed table-hover" id="table-attendances">
+                <thead>
+                  <thead>
+                    <tr>
+                      <th colspan = "3">月</th>
+                      <th colspan = "3">指示者確認㊞</th>
+                      <th colspan = "3">変更</th>
+                      <th colspan = "3">勤怠を確認する</th>
+                    </tr>
+                  </thead>
+                </thead>
+                <tbody>
+                  <tr>
+                    <!--月-->
+                    <td colspan = "3"><%= l(@first_day, format: :middle) %></td>
+                    <!--指示者確認（印)-->
+                    <td colspan = "3"><%= attendances.select :monthly_confirmation_status, [["申請なし", 0],["申請中", 1],["承認", 2],["非承認", 3]], {} %></td>
+                    
+                    <!--変更のチェックボックス、チェックがないと変更しても反映されない-->
+                  　<td colspan = "3"><%= attendances.check_box :overday_check, {:checked => true}, 1 %></td>
+                    <!--勤怠を確認するボタン-->
+                    <td colspan = "3"><%= link_to "確認", user_path(a.user_id), :style=>"color:white;", class: "btn btn-sm btn-primary" %></td>
+                  </tr>
+                </tbody>
+              </table>
+              <%= attendances.submit "変更を送信する", class: "btn btn-primary btn-sm" %>
+          <% end %>
+          <% end %>
+        <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

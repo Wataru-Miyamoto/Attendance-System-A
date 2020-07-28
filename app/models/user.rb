@@ -17,6 +17,9 @@ class User < ApplicationRecord
   has_secure_password
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
   
+  # 追加　どこからでもUser.sperior_usersが呼び出せる。
+  scope :sperior_users, -> { where(sperior: true)}
+  
   def User.digest(string)
     cost =
       if ActiveModel::SecurePassword.min_cost
@@ -63,6 +66,14 @@ class User < ApplicationRecord
       user.save
     end
   end
+  
+   # クラスメソッド
+  scope :attendancing, -> {
+    joins(:attendances)
+      .where('attendances.attendance_date = ?', Time.now.localtime('+09:00').to_date)
+      .where('attendances.arriving_at < ?', DateTime.current)
+      .where('attendances.leaving_at is null')
+  }
 
   # 更新を許可するカラムを定義
   def self.updatable_attributes

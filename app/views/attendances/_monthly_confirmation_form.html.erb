@@ -6,7 +6,7 @@
         
         <% @pending_users.each do |user_name, attendance| %>
           <h1><%= user_name %>からの１ヶ月分勤怠申請</h1>
-        <% end %>
+          
           <%= form_with model: @user, url: attendances_monthly_update_user_path, local: true, method: :patch do |f| %>
             <% @attendances.each do |a| %>
             <%= f.fields_for "attendances[]", a do |attendances| %>
@@ -38,6 +38,7 @@
               <%= attendances.submit "変更を送信する", class: "btn btn-primary btn-sm" %>
           <% end %>
           <% end %>
+        <% end %>
         <% end %>
       </div>
     </div>

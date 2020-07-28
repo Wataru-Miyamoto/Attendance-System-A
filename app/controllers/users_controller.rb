@@ -38,6 +38,7 @@ class UsersController < ApplicationController
     if @user.superior == true
       @monthly_confirmation_count = Attendance.where(monthly_confirmation_approver_id: @user.id, monthly_confirmation_status: "pending").count
     end
+    @approver = User && User.where(superior: true).where.not(id: current_user.id) && Attendance.where(monthly_confirmation_status: "approval")
   end
 
   def new

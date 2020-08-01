@@ -9,8 +9,10 @@
           <th>曜日</th>
           <th>出社</th>
           <th>退社</th>
+          <th>翌日</th>
           <th>在社時間</th>
           <th>備考</th>
+          <th>指示者確認㊞</th>
         </tr>
       </thead>
       <tbody>
@@ -31,19 +33,21 @@
                 </td>
                          
              
-              <% if !current_user.admin? || (Date.current < day.worked_on) %>
-                <td><%= attendance.time_field :started_at, readonly: true, class: "form-control" %></td>
-                <td><%= attendance.time_field :finished_at, readonly: true, class: "form-control" %></td>
+              <% if current_user || (Date.current < day.worked_on) %>
+                <td><%= attendance.time_select :started_at, readonly: true, class: "form-control" %></td>
+                <td><%= attendance.time_select :finished_at, readonly: true, class: "form-control" %></td>
               <% else %>
-                <td><%= attendance.time_field :started_at, class: "form-control" %></td>
-                <td><%= attendance.time_field :finished_at, class: "form-control" %></td>
-              <% end %>  
+                <td><%= attendance.time_select :started_at, class: "form-control" %></td>
+                <td><%= attendance.time_select :finished_at, class: "form-control" %></td>
+              <% end %> 
+              <td><%= attendance.check_box :edit_one_month_check, {:checked => false}, 0 %></td>
               <td>
                 <% if day.started_at.present? && day.finished_at.present? %>
                   <%= working_times(day.started_at, day.finished_at) %>
                 <% end %>
               </td>
               <td><%= attendance.text_field :note, class: "form-control" %></td>
+              <td><%= select :user, :name, @superiors, :prompt => "選択してください", class: "form-control" %></td>
             </tr>
           <% end %>
         <% end %>
@@ -52,7 +56,6 @@
   </div>
   
   <div class="row, center">
-    <%= link_to "キャンセル", user_path(date: @first_day), class: "btn btn-lg btn-default" %>
-    <%= f.submit "まとめて更新", class: "btn btn-lg btn-primary" %>
+    <%= link_to "キャンセル", user_path(date: @first_day), class: "btn btn-md btn-primary" %><%= f.submit "編集を保存する", class: "btn btn-md btn-primary" %>
   </div>
 <% end %>

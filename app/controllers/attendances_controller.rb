@@ -26,6 +26,39 @@ class AttendancesController < ApplicationController
   end
   
   def edit_one_month
+    @superiors = User && User.where(superior: true).where.not(id: current_user.id).map(&:name)
+    # 上長画面で一ヶ月分勤怠申請のお知らせをカウントする
+    if @user.superior == true
+      @change_confirmation_count = Attendance.where(change_confirmation_approver_id: @user.id, change_confirmation_status: "pending").count
+    end
+  end
+  
+  def change_confirmation
+    @user = User.find(params[:user_id])
+    _id = User.where(name: params[:user][:name]).first.id
+    @attendance = @user.attendances.find_by(worked_on: params[:date])
+    @attendance.update_attributes(:change_confirmation_approver_id => _id, :change_confirmation_status => :pending)
+    flash[:success] = "勤怠変更の申請を送信しました。"
+    redirect_to user_url(current_user)
+  end
+  
+  def change_confirmation_form
+    @user = User.find(params[:id])
+    @attendance_date = Attendance.where(attendance_date: current_user.id)
+    @first_day = params[:date].nil? ?
+    Date.current.beginning_of_month : params[:date].to_date
+    @superiors = User && User.where(superior: true).where.not(id: current_user.id).map(&:name)
+    @attendances = Attendance.where(change_confirmation_status: :pending, change_confirmation_approver_id: current_user.id)
+    tmp_pending_users = @attendances.group_by(&:user_id)
+    @pending_users = {}
+    tmp_pending_users.each do |user_id, attendances|
+      year_month_arr = []
+      attendances.each do |attendance|
+        year_month_arr << attendance.attendance_date.to_s
+      end
+      year_month_arr.uniq
+      @pending_users.store(User.find(user_id).name, year_month_arr.uniq)
+    end
   end
   
   def update_one_month
@@ -125,7 +158,7 @@ class AttendancesController < ApplicationController
   private
   
     def attendances_params
-      params.require(:user).permit(attendances: [:started_at, :finished_at, :note])[:attendances]
+      params.require(:user).permit(attendances: [:started_at, :finished_at, :note, :change_confirmation_status, :overday_check])[:attendances]
     end
     
     def monthly_update_params

@@ -1,6 +1,6 @@
 class AttendancesController < ApplicationController
-  before_action :set_user, only: [:edit_one_month, :update_one_month, :index_log]
-  before_action :logged_in_user, only: [:update, :edit_one_month, :index_log]
+  before_action :set_user, only: [:edit_one_month, :monthly_confirmation, :change_confirmation, :update_one_month, :index]
+  before_action :logged_in_user, only: [:update, :edit_one_month, :index]
   before_action :admin_or_correct_user, only: [:update, :edit_one_month, :update_one_month]
   before_action :set_one_month, only: :edit_one_month
   
@@ -26,32 +26,102 @@ class AttendancesController < ApplicationController
   end
   
   def edit_one_month
+    @attendance = Attendance.where(params[:id])
+    @superiors = User.where(superior: true).where.not(id: current_user.id)
+    if @user.superior == true
+      @change_confirmation_count = Attendance.where(change_confirmation_approver_id: @user.id, change_confirmation_status: "pending").count
+    end
+    time.finished_at.hour + 24 if [:tomorrow_check] == "1"
+  end
+  
+  def change_confirmation
+    ActiveRecord::Base.transaction do
+      attendances_params.each do |id, item|
+        if item[:change_confirmation_approver_id].present?
+          if item[:note].blank?
+            flash[:danger] = "備考を入力してください。"
+            redirect_to attendances_edit_one_month_user_url(date: params[:date])
+          elsif item["edit_started_at(4i)"].blank? || item["edit_started_at(5i)"].blank? || item["edit_finished_at(4i)"].blank? || item["edit_finished_at(5i)"].blank?
+            flash[:danger] = "変更申請したい時間を入力してください。"
+            redirect_to attendances_edit_one_month_user_url(date: params[:date])
+          end
+          item[:change_confirmation_status] = "1"
+          attendance = Attendance.find(id)
+          attendance.update_attributes!(item)
+        end
+      end
+      flash[:success] = "勤怠変更の申請を送信しました。"
+      redirect_to user_url(current_user)
+    end
+  rescue ActiveRecord::RecordInvalid
+    flash[:danger] = "無効な入力データがあった為、申請をキャンセルしました。"
+    redirect_to attendances_edit_one_month_user_url(date: params[:date])
+    #debugger
+  end
+  
+  def change_confirmation_form
+    @user = User.find(params[:id])
+    @attendance_date = Attendance.where(attendance_date: current_user.id)
+    @first_day = params[:date].nil? ? Date.current.beginning_of_month : params[:date].to_date
+    @superiors = User.where(superior: true).where.not(id: current_user.id)
+    @attendances = Attendance.where(change_confirmation_status: 1, change_confirmation_approver_id: current_user.id).order(user_id: "ASC", worked_on: "ASC").group_by(&:user_id)
+    @change_confirmation_count = Attendance.where(change_confirmation_approver_id: current_user.id, change_confirmation_status: 1).count
   end
   
   def update_one_month
     ActiveRecord::Base.transaction do
       attendances_params.each do |id, item|
-        attendance = Attendance.find(id)
-        attendance.update_attributes!(item)
+        if item[:edit_one_month_check] == "1"
+          attendance = Attendance.find(id)
+          if item[:change_confirmation_status] == "2"
+            attendance.changed_started_at = attendance.started_at if attendance.changed_started_at.nil?
+            attendance.changed_finished_at = attendance.finished_at if attendance.changed_finished_at.nil?
+            item[:started_at] = attendance.edit_started_at
+            item[:finished_at] = attendance.edit_finished_at
+          end
+          attendance.update_attributes!(item)
+        end
       end
     end
-    flash[:success] = "1ヶ月分の勤怠情報を更新しました。"
-    redirect_to user_url(date: params[:date])
+    flash[:info] = "勤怠変更申請情報を更新処理しました。ご確認ください。"
+    redirect_to user_url(current_user.id)
   rescue ActiveRecord::RecordInvalid
-    flash[:danger] = "無効な入力データがあった為、更新をキャンセルしました。"
-    redirect_to attendances_edit_one_month_user_url(date: params[:date])
+    flash[:danger] = "無効な入力データがあった為、更新処理をキャンセルしました。"
+    redirect_to user_url(current_user.id)
+  end
+  
+  def index
+    @attendances = Attendance.where(change_confirmation_status: 2).order(worked_on: "ASC")
   end
   
   #一ヶ月分の勤怠申請
   def monthly_confirmation
-    @user = User.find(params[:user_id])
+    #@user = User.find(params[:user_id])
     #パラメーターでユーザーの名前を検索してidを入れる
-    _id = User.where(name: params[:user][:name]).first.id
+    #_id = User.where(name: params[:user][:name]).first.id
     #一ヶ月分の勤怠検索して上長IDとステータスの申請して保存する
-    @attendance = @user.attendances.find_by(worked_on: params[:date])
-    @attendance.update_attributes(:monthly_confirmation_approver_id => _id, :monthly_confirmation_status => :pending)
-    flash[:success] = "1ヶ月分の勤怠申請を送信しました。"
+    #@attendance = @user.attendances.find_by(worked_on: params[:date])
+    #@attendance.update_attributes(:monthly_confirmation_approver_id => _id, :monthly_confirmation_status => :pending)
+    #flash[:success] = "1ヶ月分の勤怠申請を送信しました。"
+    #redirect_to user_url(current_user)
+    ActiveRecord::Base.transaction do
+      monthly_update_params.each do |id, item|
+        if item[:monthly_confirmation_approver_id].present?
+          item[:monthly_confirmation_status] = "1"
+          attendance = Attendance.find(id)
+          attendance.update_attributes!(item)
+          flash[:success] = "勤怠変更の申請を送信しました。"
+          redirect_to user_url(current_user)
+        else
+          flash[:danger] = "申請先を入力してください。"
+          redirect_to user_url(current_user)
+        end
+      end
+    end
+  rescue ActiveRecord::RecordInvalid
+    flash[:danger] = "無効な入力データがあった為、申請をキャンセルしました。"
     redirect_to user_url(current_user)
+    #debugger
   end
   
     #上長承認モーダル画面・ユーザーからの1ヶ月分勤怠
@@ -60,7 +130,7 @@ class AttendancesController < ApplicationController
     @attendance_date = Attendance.where(attendance_date: current_user.id)
     @first_day = params[:date].nil? ?
     Date.current.beginning_of_month : params[:date].to_date
-    @superiors = User && User.where(superior: true).where.not(id: current_user.id).map(&:name)
+    @superiors = User.where(superior: true).where.not(id: current_user.id).map(&:name)
     #未承認かつidがcurrent_user
     @attendances = Attendance.where(monthly_confirmation_status: :pending, monthly_confirmation_approver_id: current_user.id)
     #ユーザー（user_id)ごとに勤怠のオブジェクトを分ける
@@ -125,12 +195,12 @@ class AttendancesController < ApplicationController
   private
   
     def attendances_params
-      params.require(:user).permit(attendances: [:started_at, :finished_at, :note])[:attendances]
+      params.require(:user).permit(attendances: [:started_at, :finished_at, :edit_started_at, :edit_finished_at, :note, :change_confirmation_approver_id, :change_confirmation_status, :tomorrow_check, :edit_one_month_check])[:attendances]
     end
     
     def monthly_update_params
       #debugger
-      params.require(:user).permit(attendances: [:monthly_confirmation_status, :overday_check]).merge(user_id: params[:id])[:attendances]
+      params.require(:user).permit(attendances: [:date, :monthly_confirmation_approver_id, :monthly_confirmation_status, :overday_check])[:attendances]
     end
     
     def admin_or_correct_user

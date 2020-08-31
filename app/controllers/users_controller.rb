@@ -33,12 +33,21 @@ class UsersController < ApplicationController
   
   def show
     @worked_sum = @attendances.where.not(started_at: nil).count
-    @superiors = User && User.where(superior: true).where.not(id: current_user.id).map(&:name)
+    @superiors = User && User.where(superior: true).where.not(id: current_user.id)
     # 上長画面で一ヶ月分勤怠申請のお知らせをカウントする
     if @user.superior == true
       @monthly_confirmation_count = Attendance.where(monthly_confirmation_approver_id: @user.id, monthly_confirmation_status: "pending").count
+      @change_confirmation_count = Attendance.where(change_confirmation_approver_id: @user.id, change_confirmation_status: 1).count
     end
-    @approver = User && User.where(superior: true).where.not(id: current_user.id) && Attendance.where(monthly_confirmation_status: "approval")
+    @approver = Attendance.where(monthly_confirmation_status: 1..3)
+  end
+  
+  def edit_text(attendance)
+    if Attendance.change_confirmation_status.present?
+      return '勤怠編集申請中' if attendance.change_confirmation_status == 1
+      return '勤怠編集承認済' if attendance.change_confirmation_status == 2
+      return '勤怠編集否認' if attendance.change_confirmation_status == 3
+    end
   end
 
   def new

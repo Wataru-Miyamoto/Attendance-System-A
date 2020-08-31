@@ -2,11 +2,14 @@ class Attendance < ApplicationRecord
   belongs_to :user
     
   attr_accessor :overday_check
+  attr_accessor :tomorrow_check
+  attr_accessor :edit_one_month_check
   validates :worked_on, presence: true
   validates :note, length: { maximum: 50 }
   
   validate :finished_at_is_invaild_without_a_started_at
   validate :started_at_than_finished_at_fast_if_invalid
+  
   
   def finished_at_is_invaild_without_a_started_at
     errors.add(:started_at, "が必要です") if started_at.blank? && finished_at.present?
@@ -29,4 +32,5 @@ class Attendance < ApplicationRecord
     end
     year_month_arr.uniq.count
   end
+  
 end

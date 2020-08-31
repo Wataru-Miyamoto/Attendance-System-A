@@ -16,14 +16,16 @@
     </thead>
     
     <tbody>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
+      <% @attendances.each do |a| %>
+        <tr>
+          <td><%= a.worked_on if a.finished_at.present? %></td>
+          <td><%= l(a.changed_started_at, format: :time) %></td>
+          <td><%= l(a.changed_finished_at, format: :time) %></td>
+          <td><%= l(a.started_at, format: :time) %></td>
+          <td><%= l(a.finished_at, format: :time) %></td>
+          <td><%= User.find(a.change_confirmation_approver_id).name %></td>
+        </tr>
+      <% end %>
     </tbody>
   </table>
 </div>

@@ -26,24 +26,36 @@
 <div class="hover">
   <!--上長で（自分かどうか）&未承認だったら申請のお知らせの表示・未承認のものがあれば文字は赤色-->
   <% if current_user?(@user) %>
-  <% if current_user.superior? %>
-    <% unless @monthly_confirmation_count == nil %>
-      <% if @monthly_confirmation_count > 0 %>
-        <div class="border border-danger text text-danger">
-          <%= link_to "【所属長承認申請のお知らせ】", attendances_monthly_confirmation_form_user_path(@user), remote: true, class: 'text text-danger' %>
-            <div id="monthly-confirmation-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
-  
-          <!-- 所属長承認の件数をカウントする-->
-            <%= @monthly_confirmation_count %>件のお知らせがあります
-  
-        </div>
-      <% else %>
-        <p>【所属長承認申請のお知らせ】</p><br>
+    <% if current_user.superior? %>
+      <% unless @monthly_confirmation_count == nil %>
+        <% if @monthly_confirmation_count > 0 %>
+          <div class="border border-danger text text-danger">
+            <%= link_to "【所属長承認申請のお知らせ】", attendances_monthly_confirmation_form_user_path(@user), remote: true, class: 'text text-danger' %>
+              <div id="monthly-confirmation-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+            <!-- 所属長承認の件数をカウントする-->
+              <%= @monthly_confirmation_count %>件のお知らせがあります
+          </div>
+        <% else %>
+          <p>【所属長承認申請のお知らせ】</p><br>
+        <% end %>
       <% end %>
-    <% end %>
-    <%= link_to "【勤怠変更申請のお知らせ】", "#" %><br>
+      
+      <% unless @change_confirmation_count == nil %>
+        <% if @change_confirmation_count > 0 %>
+          <div class="border border-danger text text-danger">
+            <%= link_to "【勤怠変更申請のお知らせ】", attendances_change_confirmation_form_user_path(@user), remote: true, class: 'text text-danger' %>
+              <div id="change-confirmation-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+              <%= @change_confirmation_count %>件のお知らせがあります
+          </div>
+        <% else %>
+          <p>【勤怠変更申請のお知らせ】</p><br>
+        <% end %>
+      <% end %>
+      
+
     <%= link_to "【残業申請のお知らせ】", "#" %>
-  <% end %>
+      
+    <% end %>
   <% end %>
 </div>
 
@@ -51,7 +63,7 @@
     <% if current_user?(@user) %>
     <%= link_to "勤怠を編集", attendances_edit_one_month_user_path(date: @first_day), class: "btn btn-primary" %>
     <%= link_to "CSV出力", "#", class: "btn btn-primary" %><br>
-    <%= link_to "勤怠修正ログ（承認済）", attendance_logs_path(@attendance, params: {id: @user.id, first_day: @first_day}), :style=>"color:white;", class: "btn btn-primary btn-sm" %>
+    <%= link_to "勤怠修正ログ（承認済）", attendances_index_user_path(@user), :style=>"color:white;", class: "btn btn-primary btn-sm" %>
     <% end %>
 </div>
 
@@ -90,7 +102,7 @@
     </thead>
 
     <tbody>
-      <% (@attendances).each do |day| %>
+      <% @attendances.each do |day| %>
         <tr>
           <td><% if current_user?(@user) %>
                 <%= link_to "残業申請", attendances_update_overtime_form_user_path(@user), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %>
@@ -109,18 +121,24 @@
             <% end %>
             <%= $days_of_the_week[day.worked_on.wday] %>
           </td>
-          
-          <td><%= l(day.started_at, format: :hour) if day.started_at.present? %></td>
-          <td><%= l(day.started_at, format: :minute) if day.started_at.present? %></td>
+            <td><%= l(day.started_at, format: :hour) if day.started_at.present? %></td>
+            <td><%= l(day.started_at, format: :minute) if day.started_at.present? %></td>
           <td>
             <% if current_user?(@user) %>
-           　  <% if btn_text = attendance_state(day) %>
-                <%= link_to "#{btn_text}", user_attendance_path(@user, day), method: :patch, class: "btn btn-primary btn-attendance" %>
+           　  <% if btn_text = attendance_state(day) && day.started_at.blank? %>
+                <%= link_to "出社", user_attendance_path(@user, day), method: :patch, class: "btn btn-primary btn-attendance" %>
               <% end %>
             <% end %>
           </td>
-          <td><%= l(day.finished_at, format: :hour) if day.finished_at.present? %></td>
-          <td><%= l(day.finished_at, format: :minute) if day.finished_at.present? %></td>
+            <td><%= l(day.finished_at, format: :hour) if day.finished_at.present? %></td>
+            <td><%= l(day.finished_at, format: :minute) if day.finished_at.present? %></td>
+           <td>
+            <% if current_user?(@user) %>
+           　  <% if btn_text = attendance_state(day) && day.started_at.present? && day.finished_at.nil? %>
+                <%= link_to "退社", user_attendance_path(@user, day), method: :patch, class: "btn btn-primary btn-attendance" %>
+              <% end %>
+            <% end %>
+          </td>
           <td>
             <% if day.started_at.present? && day.finished_at.present? %>
               <%= str_times = working_times(day.started_at, day.finished_at) %>
@@ -133,12 +151,21 @@
           <td></td>
           <td></td>
           <td></td>
-          <td></td>
-          <td></td>
+          <td>
+            <% unless day.change_confirmation_status == nil? %>
+              <% if day.change_confirmation_status == 1 %>
+                勤怠編集申請中
+              <% elsif day.change_confirmation_status == 2 %>
+                勤怠編集承認済
+              <% elsif day.change_confirmation_status == 3 %>
+                勤怠編集否認
+              <% end %>
+            <% end %>
+          </td>
         </tr>
       <% end %>
     </tbody>
-    
+
     <tfoot>
       <!--rowspan:縦結合、colspan：横結合-->
       <tr>
@@ -148,17 +175,24 @@
         <td><%= format("%.2f", @total_working_times.to_f) %></td>
         <td colspan="6"></td>
         <td class="table-body">所属長承認
-        <% unless @approver == nil %>
-        <%= @approver.name %>から承認済
-        <% else %>
-        　未
+        <% unless @approver == nil? %>
+          <% @approver.each do |approver| %>
+            <% if approver.monthly_confirmation_status == 1 %>
+              <%= User.find(approver.monthly_confirmation_approver_id).name %>へ申請中
+            <% elsif approver.monthly_confirmation_status == 2 %>
+              <%= User.find(approver.monthly_confirmation_approver_id).name %>から承認済
+            <% elsif approver.monthly_confirmation_status == 3 %>
+              <%= User.find(approver.monthly_confirmation_approver_id).name %>から否認
+            <% end %>
+          <% end %>
+          　未
         <% end %>
           <% if current_user?(@user) %>
-            <%= form_with url: attendances_monthly_confirmation_user_path(@user), method: :patch do %>
-              <%= select :user, :name, @superiors, :prompt => "選択してください" %>
-              <%= hidden_field_tag :date, @first_day %>
-              <%= hidden_field_tag :user_id, @user.id %>
-              <%= submit_tag("申請", class: "btn btn-primary btn-block btn-sm")%>
+            <%= form_with model: @user, url: attendances_monthly_confirmation_user_path(@user), method: :patch do |ma| %>
+              <%= ma.collection_select :monthly_confirmation_approver_id, @superiors, :id, :name, {include_blank: true} %>
+              <!--< %= #ma.hidden_field :date, @first_day %>-->
+              <!--< %= #ma.hidden_field :user_id, @user.id %>-->
+              <%= ma.submit "申請", class: "btn btn-primary btn-block btn-sm" %>
             <% end %>
           <% end %>
         </td>

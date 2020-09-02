@@ -4,6 +4,7 @@ class Attendance < ApplicationRecord
   attr_accessor :overday_check
   attr_accessor :tomorrow_check
   attr_accessor :edit_one_month_check
+  attr_accessor :overwork_check
   validates :worked_on, presence: true
   validates :note, length: { maximum: 50 }
   

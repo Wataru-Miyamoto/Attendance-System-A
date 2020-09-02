@@ -1,5 +1,5 @@
 class AttendancesController < ApplicationController
-  before_action :set_user, only: [:edit_one_month, :monthly_confirmation, :change_confirmation, :update_one_month, :index]
+  before_action :set_user, only: [:edit_one_month, :monthly_confirmation, :change_confirmation, :update_one_month, :index, :apply_overtime_form]
   before_action :logged_in_user, only: [:update, :edit_one_month, :index]
   before_action :admin_or_correct_user, only: [:update, :edit_one_month, :update_one_month]
   before_action :set_one_month, only: :edit_one_month
@@ -31,7 +31,7 @@ class AttendancesController < ApplicationController
     if @user.superior == true
       @change_confirmation_count = Attendance.where(change_confirmation_approver_id: @user.id, change_confirmation_status: "pending").count
     end
-    time.finished_at.hour + 24 if [:tomorrow_check] == "1"
+    time.finished_at.day + 1 if [:tomorrow_check] == "1"
   end
   
   def change_confirmation
@@ -160,35 +160,47 @@ class AttendancesController < ApplicationController
     redirect_to user_url(current_user.id)
   end
   
-  def update_overtime
-    #todo
-    @attendance = Attendance.find(params[:id])
-    
-    tmp_date = @attendance.attendance_date
-    tmp_hour = params[:attendance][:overtime].split(":")[0].to_i
-    tmp_min = params[:attendance][:overtime].split(":")[1].to_i
-    @attendance.overtime = tmp_date + tmp_hour.hour + tmp_min.minute
-    
-    #チェックボックスはifで分岐だけでデータベースには入れない
-    if params[:overtime]
-      @attendance.overtime = @attendance.overtime + 1.day
-    end 
-    
-    @attendance.user_id = current_user.id
-    #指示者確認・パラメーターでユーザーの名前を検索してidを入れる
-    @attendance.overwork_approver_id = User.where(name: params[:user][:name]).first.id
-    @attendance.task_memo = params[:attendance][:task_memo]
-    if @attendance.save
-      redirect_to attendances_path, notice: '残業申請を送付しました。' 
-    else
-      redirect_to attendances_path, notice: '残業申請は失敗しました。' 
+  def apply_overtime_form
+    @attendance = Attendance.where(params[:id])
+    @superiors = User.where(superior: true).where.not(id: current_user.id)
+    @first_day = params[:date].nil? ? Date.current.beginning_of_month : params[:date].to_date
+    @worked_on = @user.attendances.find_by(worked_on: day)
+    time.finished_at.day + 1 if [:tomorrow_check] == "1"
+  end
+  
+  def apply_overtime
+   ActiveRecord::Base.transaction do
+      update_overtime_params.each do |id, item|
+        if item[:overwork_approver_id].present?
+          if item[:task_memo].blank?
+            flash[:danger] = "業務処理内容を入力してください。"
+            redirect_to user_url(current_user)
+          elsif item["overtime(4i)"].blank? || item["overtime(5i)"].blank?
+            flash[:danger] = "残業申請したい時間を入力してください。"
+            redirect_to user_url(current_user)
+          end
+          item[:overwork_status] = "1"
+          attendance = Attendance.find(id)
+          attendance.update_attributes!(item)
+        end
+      end
+      flash[:success] = "残業申請を送信しました。"
+      redirect_to user_url(current_user)
     end
+  rescue ActiveRecord::RecordInvalid
+    flash[:danger] = "無効な入力データがあった為、申請をキャンセルしました。"
+    redirect_to user_url(current_user)
+      #redirect_to attendances_path, notice: '残業申請を送付しました。' 
+      #redirect_to attendances_path, notice: '残業申請は失敗しました。' 
   end
   
   def update_overtime_form
-    @attendance = Attendance.find(params[:id])
-    @superiors = User.where(superior: true).where.not(id: current_user.id).map(&:name)
-    @youbi = %w[日 月 火 水 木 金 土]
+    @user = User.find(params[:id])
+    @attendance_date = Attendance.where(attendance_date: current_user.id)
+    @first_day = params[:date].nil? ? Date.current.beginning_of_month : params[:date].to_date
+    @superiors = User.where(superior: true).where.not(id: current_user.id)
+    @attendances = Attendance.where(overwork_status: 1, overwork_approver_id: current_user.id).order(user_id: "ASC", worked_on: "ASC").group_by(&:user_id)
+    @overwork_count = Attendance.where(overwork_approver_id: current_user.id, overwork_status: 1).count
   end
   
   
@@ -201,6 +213,10 @@ class AttendancesController < ApplicationController
     def monthly_update_params
       #debugger
       params.require(:user).permit(attendances: [:date, :monthly_confirmation_approver_id, :monthly_confirmation_status, :overday_check])[:attendances]
+    end
+    
+    def update_overtime_params
+      params.require(:user).permit(attendances: [:overtime, :task_memo, :overwork_approver_id, :overwork_status, :tomorrow_check, :overwork_check])[:attendances]
     end
     
     def admin_or_correct_user

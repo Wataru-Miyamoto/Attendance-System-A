@@ -52,9 +52,18 @@
         <% end %>
       <% end %>
       
-
-    <%= link_to "【残業申請のお知らせ】", "#" %>
-      
+      <% unless @overwork_count == nil %>
+        <% if @overwork_count > 0 %>
+          <div class="border border-danger text text-danger">
+            <%= link_to "【残業申請のお知らせ】", attendances_apply_overtime_form_user_path(@user), remote: true, class: 'text text-danger' %>
+            <div id="apply-overtime-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+            <%= @overwork_count %>件のお知らせがあります
+          </div>
+        <% else %>
+          <p>【残業申請のお知らせ】</p>
+        <% end %>
+      <% end %>
+            
     <% end %>
   <% end %>
 </div>
@@ -86,7 +95,7 @@
         <th colspan = "3">終了予定時間</th>
         <th rowspan = "2">時間外時間</th>
         <th rowspan = "2">業務処理内容</th>
-        <th rowspan = "2">指示者確認印</th>
+        <th rowspan = "2">指示者確認㊞</th>
       </tr>
       <tr>
         <th>時</th>
@@ -105,7 +114,7 @@
       <% @attendances.each do |day| %>
         <tr>
           <td><% if current_user?(@user) %>
-                <%= link_to "残業申請", attendances_update_overtime_form_user_path(@user), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %>
+                <%= link_to "残業申請", attendances_apply_overtime_form_user_path(@attendances_apply_overtime), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %>
                 <div id="overwork-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
               <% end %></td>
           <td><%= l(day.worked_on, format: :short) %></td>
@@ -159,6 +168,15 @@
                 勤怠編集承認済
               <% elsif day.change_confirmation_status == 3 %>
                 勤怠編集否認
+              <% end %>
+            <% end %><br>
+            <% unless day.overwork_status == nil? %>
+              <% if day.overwork_status == 1 %>
+                残業申請中
+              <% elsif day.overwork_status == 2 %>
+                残業承認済
+              <% elsif day.overwork_status == 3 %>
+                残業否認
               <% end %>
             <% end %>
           </td>

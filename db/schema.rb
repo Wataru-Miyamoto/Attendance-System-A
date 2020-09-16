@@ -70,9 +70,9 @@ ActiveRecord::Schema.define(version: 20200803131124) do
     t.string "remember_digest"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.datetime "basic_time", default: "2020-05-08 23:00:00"
-    t.datetime "designated_work_start_time", default: "2020-05-09 00:00:00"
-    t.datetime "designated_work_end_time", default: "2020-05-09 09:00:00"
+    t.time "basic_time", default: "2000-01-01 23:00:00"
+    t.time "designated_work_start_time", default: "2000-01-01 00:00:00"
+    t.time "designated_work_end_time", default: "2000-01-01 09:00:00"
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 

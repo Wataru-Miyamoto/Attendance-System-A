@@ -41,7 +41,6 @@ class UsersController < ApplicationController
       @overwork_count = Attendance.where(overwork_approver_id: @user.id, overwork_status: 1).count
     end
     @approver = Attendance.where(monthly_confirmation_status: 1..3)
-    @attendances_apply_overtime = @user.attendances.find(params[:id])
   end
 
   def new

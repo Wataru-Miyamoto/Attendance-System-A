@@ -3,9 +3,13 @@
   <table class="table table-bordered table-condensed user-table">
     <tr>
       <td>
-        <%= link_to "←", user_path(date: @first_day.prev_month), class: "btn btn-primary" %>
+        <% if current_user?(@user) %>
+          <%= link_to "←", user_path(date: @first_day.prev_month), class: "btn btn-primary" %>
+        <% end %>
         <%= l(@first_day, format: :middle) %>　時間管理表
-        <%= link_to "→", user_path(date: @first_day.next_month), class: "btn btn-primary" %>
+        <% if current_user?(@user) %>
+          <%= link_to "→", user_path(date: @first_day.next_month), class: "btn btn-primary" %>
+        <% end %>
       </td>
       <td>指定勤務開始時間　<%= format_basic_info(@user.designated_work_start_time) %><br>
           指定勤務終了時間　<%= format_basic_info(@user.designated_work_end_time) %></td>
@@ -55,8 +59,8 @@
       <% unless @overwork_count == nil %>
         <% if @overwork_count > 0 %>
           <div class="border border-danger text text-danger">
-            <%= link_to "【残業申請のお知らせ】", attendances_apply_overtime_form_user_path(@user), remote: true, class: 'text text-danger' %>
-            <div id="apply-overtime-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+            <%= link_to "【残業申請のお知らせ】", update_overtime_form_user_attendance_path(@user), remote: true, class: 'text text-danger' %>
+            <div id="update-overtime-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
             <%= @overwork_count %>件のお知らせがあります
           </div>
         <% else %>
@@ -114,8 +118,7 @@
       <% @attendances.each do |day| %>
         <tr>
           <td><% if current_user?(@user) %>
-                <%= link_to "残業申請", attendances_apply_overtime_form_user_path(@attendances_apply_overtime), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %>
-                <div id="overwork-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+                <%= link_to "残業申請", apply_overtime_form_user_attendance_path(@user, day), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %>
               <% end %></td>
           <td><%= l(day.worked_on, format: :short) %></td>
           
@@ -218,3 +221,4 @@
     </tfoot>    
   </table>
 </div>
+<div id="apply-overtime-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>

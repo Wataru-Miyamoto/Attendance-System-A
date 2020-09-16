@@ -43,32 +43,28 @@ Rails.application.routes.draw do
       get   'attendances/change_confirmation_form'
       post  'attendances/change_confirmation_form'
       
-      #残業申請送信フォーム
-      get   'attendances/apply_overtime_form'
-      post  'attendances/apply_overtime_form'
-      patch 'attendances/apply_overtime_form'
-      
-      #残業申請
-      get   'attendances/apply_overtime'
-      post  'attendances/apply_overtime'
-      patch 'attendances/apply_overtime'
-      
-      #残業申請のお知らせフォーム
-      get   'attendances/update_overtime_form'
-      post  'attendances/update_overtime_form'
-      
-      #残業承認
-      get   'attendances/update_overtime'
-      post  'attendances/update_overtime'
-      patch 'attendances/update_overtime'
-      
       get   'attendances/index'
       post  'attendances/index'
       patch 'attendances/index'
       
     end
-    resources :attendances, only: :update
+    resources :attendances, only: :update do
+      member do
+        #残業申請送信フォーム
+        get   'apply_overtime_form'
+  
+        #残業申請
+        patch 'apply_overtime'
+        
+        #残業申請のお知らせフォーム
+        get   'update_overtime_form'
+        
+        #残業承認
+        patch 'update_overtime'
+        
+      end
     end
     resources :bases do
+    end
   end
 end

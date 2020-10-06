@@ -22,7 +22,7 @@ class Attendance < ApplicationRecord
     end
   end
   
-  enum monthly_confirmation_status: { nothing: 0, pending: 1, approval: 2, denial: 3 }
+  #enum monthly_confirmation_status: { nothing: 0, pending: 1, approval: 2, denial: 3 }
   
   # 【所属長承認のお知らせ】一ヶ月支持者確認がログインユーザーで、ステータスが未承認かどうか＆何月分の勤怠
   def self.monthly_confirmation(current_user)

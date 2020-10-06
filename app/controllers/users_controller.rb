@@ -36,11 +36,11 @@ class UsersController < ApplicationController
     @superiors = User && User.where(superior: true).where.not(id: current_user.id)
     # 上長画面で一ヶ月分勤怠申請のお知らせをカウントする
     if @user.superior == true
-      @monthly_confirmation_count = Attendance.where(monthly_confirmation_approver_id: @user.id, monthly_confirmation_status: "pending").count
+      @monthly_confirmation_count = Attendance.where(monthly_confirmation_approver_id: @user.id, monthly_confirmation_status: 1).count
       @change_confirmation_count = Attendance.where(change_confirmation_approver_id: @user.id, change_confirmation_status: 1).count
       @overwork_count = Attendance.where(overwork_approver_id: @user.id, overwork_status: 1).count
     end
-    @approver = Attendance.where(monthly_confirmation_status: 1..3)
+    @approver = @user.attendances.find_by(worked_on: @first_day)
   end
 
   def new
@@ -103,6 +103,11 @@ class UsersController < ApplicationController
     
     def basic_info_params
       params.require(:user).permit(:basic_time, :work_time)
+    end
+    
+    def monthly_update_params
+      #debugger
+      params.require(:user).permit(attendances: [:date, :monthly_confirmation_approver_id, :monthly_confirmation_status, :overday_check])[:attendances]
     end
     
     def admin_or_correct_user

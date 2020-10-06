@@ -4,6 +4,7 @@ class Attendance < ApplicationRecord
   attr_accessor :overday_check
   attr_accessor :tomorrow_check
   attr_accessor :edit_one_month_check
+  attr_accessor :overwork_check
   validates :worked_on, presence: true
   validates :note, length: { maximum: 50 }
   
@@ -21,7 +22,7 @@ class Attendance < ApplicationRecord
     end
   end
   
-  enum monthly_confirmation_status: { nothing: 0, pending: 1, approval: 2, denial: 3 }
+  #enum monthly_confirmation_status: { nothing: 0, pending: 1, approval: 2, denial: 3 }
   
   # 【所属長承認のお知らせ】一ヶ月支持者確認がログインユーザーで、ステータスが未承認かどうか＆何月分の勤怠
   def self.monthly_confirmation(current_user)

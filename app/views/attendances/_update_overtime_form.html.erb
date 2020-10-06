@@ -1,40 +1,53 @@
-<div class="modal-dialog">
+<div class="modal-dialog modal-lg">
   <div class="modal-content">
-    <h1>残業申請</h1>
     <div class="update_overtime_form">
-      <%= form_for(@attendance, remote: true) do |f| %>
-        <table class = "table-bordered table-striped table-condensed">
-          <thead>
-            <thead>
-              <tr>
-                <th width = "10%">日付</th>
-                <th width = "10%">曜日</th>
-                <th width = "20%">終了予定時間</th>
-                <th width = "10%">翌日</th>
-                <th width = "30%">業務処理内容</th>
-                <th width = "20%">指示者確認（印）</th>
-              </tr>
-            </thead>
-          </thead>
-          <tbody>
-            <tr>
-              <!--日付-->
-              <td class = "attendance_date"><%= f.object.attendance_date.month %>/<%= f.object.attendance_date.day %></td>
-              <!--曜日-->
-              <td class = "attendance_date"><%= @youbi[f.object.attendance_date.wday] %></td>
-              <!--終了予定時間-->
-              <td><%= f.time_field :overtime %></td>
-              <!--翌日のチェックボックス-->
-            　<td><%= check_box_tag :overday_check %></td>
-              <!--業務処理内容-->
-              <td><%= f.text_field :task_memo %></td>
-              <!--指示者確認（印)-->
-              <td><%= select :user, :name, @speriors,  :prompt => "選択してください" %></td>
-            </tr>
-          </tbody>
-        </table>
-        <%= f.submit "変更を送信する", class: "btn btn-primary btn-sm" %>
-      <% end %>
+      <div id="black">
+        <% @attendances.each do |user_id, attendance| %>
+          <% user = User.find(user_id) %>
+          <h2><%= user.name %>からの残業申請</h2>
+          <%= form_with model: @user, url: update_overtime_user_attendance_path, local: true, method: :patch do |f| %>
+            <% attendance.each do |a| %>
+              <%= f.fields_for "attendances[]", a do |attendances| %>
+                <table class = "table table-bordered table-condensed table-hover" id="table-attendances">
+                  <thead>
+                    <thead>
+                      <tr>
+                        <th>日付</th>
+                        <th>曜日</th>
+                        <th>指定勤務終了時間</th>
+                        <th>終了予定時間</th>
+                        <th>時間外時間</th>
+                        <th>業務処理内容</th>
+                        <th>指示者確認㊞</th>
+                        <th>変更</th>
+                        <th>勤怠を確認する</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <!--日付-->
+                      <td class="center"><%= l(a.worked_on, format: :short) %></td>
+                      <!--曜日-->
+                      <td class="center"><%= $days_of_the_week[a.worked_on.wday] %></td>
+                      <td class="center"><%= l(user.designated_work_end_time, format: :time) %></td>
+                      <td class="center"><%= l(a.overtime, format: :time) %></td>
+                      <td class="center"><%= overtimes(a.overtime, user.designated_work_end_time) %></td>
+                      <td class="center"><%= a.task_memo %></td>
+                      <td class="center"><%= attendances.select :overwork_status, [["申請なし", 0],["申請中", 1],["承認", 2],["非承認", 3]], {} %></td>
+                      
+                      <!--変更のチェックボックス、チェックがないと変更しても反映されない-->
+                    　<td><%= attendances.check_box :overwork_check, {:checked => true}, 1 %></td>
+                      <!--勤怠を確認するボタン-->
+                      <td><%= link_to "確認", user_path(a.user_id, date: a.worked_on.beginning_of_month), :style=>"color:white;", class: "btn btn-sm btn-primary" %></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <%= attendances.submit "変更を送信する", class: "btn btn-primary btn-sm" %>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>

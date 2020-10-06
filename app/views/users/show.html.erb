@@ -3,9 +3,13 @@
   <table class="table table-bordered table-condensed user-table">
     <tr>
       <td>
-        <%= link_to "←", user_path(date: @first_day.prev_month), class: "btn btn-primary" %>
+        <% if current_user?(@user) %>
+          <%= link_to "←", user_path(date: @first_day.prev_month), class: "btn btn-primary" %>
+        <% end %>
         <%= l(@first_day, format: :middle) %>　時間管理表
-        <%= link_to "→", user_path(date: @first_day.next_month), class: "btn btn-primary" %>
+        <% if current_user?(@user) %>
+          <%= link_to "→", user_path(date: @first_day.next_month), class: "btn btn-primary" %>
+        <% end %>
       </td>
       <td>指定勤務開始時間　<%= format_basic_info(@user.designated_work_start_time) %><br>
           指定勤務終了時間　<%= format_basic_info(@user.designated_work_end_time) %></td>
@@ -30,13 +34,13 @@
       <% unless @monthly_confirmation_count == nil %>
         <% if @monthly_confirmation_count > 0 %>
           <div class="border border-danger text text-danger">
-            <%= link_to "【所属長承認申請のお知らせ】", attendances_monthly_confirmation_form_user_path(@user), remote: true, class: 'text text-danger' %>
+            <%= link_to "【所属長承認申請のお知らせ】", monthly_confirmation_form_user_attendances_path(@user), remote: true, class: 'text text-danger' %>
               <div id="monthly-confirmation-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
             <!-- 所属長承認の件数をカウントする-->
               <%= @monthly_confirmation_count %>件のお知らせがあります
           </div>
         <% else %>
-          <p>【所属長承認申請のお知らせ】</p><br>
+          <p>【所属長承認申請のお知らせ】</p>
         <% end %>
       <% end %>
       
@@ -48,13 +52,22 @@
               <%= @change_confirmation_count %>件のお知らせがあります
           </div>
         <% else %>
-          <p>【勤怠変更申請のお知らせ】</p><br>
+          <p>【勤怠変更申請のお知らせ】</p>
         <% end %>
       <% end %>
       
-
-    <%= link_to "【残業申請のお知らせ】", "#" %>
-      
+      <% unless @overwork_count == nil %>
+        <% if @overwork_count > 0 %>
+          <div class="border border-danger text text-danger">
+            <%= link_to "【残業申請のお知らせ】", update_overtime_form_user_attendance_path(@user), remote: true, class: 'text text-danger' %>
+            <div id="update-overtime-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+            <%= @overwork_count %>件のお知らせがあります
+          </div>
+        <% else %>
+          <p>【残業申請のお知らせ】</p>
+        <% end %>
+      <% end %>
+            
     <% end %>
   <% end %>
 </div>
@@ -86,7 +99,7 @@
         <th colspan = "3">終了予定時間</th>
         <th rowspan = "2">時間外時間</th>
         <th rowspan = "2">業務処理内容</th>
-        <th rowspan = "2">指示者確認印</th>
+        <th rowspan = "2">指示者確認㊞</th>
       </tr>
       <tr>
         <th>時</th>
@@ -105,8 +118,7 @@
       <% @attendances.each do |day| %>
         <tr>
           <td><% if current_user?(@user) %>
-                <%= link_to "残業申請", attendances_update_overtime_form_user_path(@user), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %>
-                <div id="overwork-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>
+                <%= link_to "残業申請", apply_overtime_form_user_attendance_path(@user, day), remote: true, :style=>"color:white;", class: "btn btn-sm btn-primary" %>
               <% end %></td>
           <td><%= l(day.worked_on, format: :short) %></td>
           
@@ -149,16 +161,29 @@
           <td></td>
           <td></td>
           <td></td>
-          <td></td>
-          <td></td>
+          <td>
+            <% if day.started_at.present? && day.finished_at.present? && day.overtime.present? %>
+              <%= overtimes(day.overtime, current_user.designated_work_end_time) %>
+            <% end %>
+            </td>
+          <td><%= day.task_memo %></td>
           <td>
             <% unless day.change_confirmation_status == nil? %>
               <% if day.change_confirmation_status == 1 %>
-                勤怠編集申請中
+                <%= User.find(day.change_confirmation_approver_id).name %>へ勤怠編集申請中
               <% elsif day.change_confirmation_status == 2 %>
-                勤怠編集承認済
+                <%= User.find(day.change_confirmation_approver_id).name %>から勤怠編集承認済
               <% elsif day.change_confirmation_status == 3 %>
-                勤怠編集否認
+                <%= User.find(day.change_confirmation_approver_id).name %>から勤怠編集否認
+              <% end %>
+            <% end %>
+            <% unless day.overwork_status == nil? %>
+              <% if day.overwork_status == 1 %>
+                <%= User.find(day.overwork_approver_id).name %>へ残業申���中
+              <% elsif day.overwork_status == 2 %>
+                <%= User.find(day.overwork_approver_id).name %>より残業承認済
+              <% elsif day.overwork_status == 3 %>
+                <%= User.find(day.overwork_approver_id).name %>より残業否認
               <% end %>
             <% end %>
           </td>
@@ -175,22 +200,21 @@
         <td><%= format("%.2f", @total_working_times.to_f) %></td>
         <td colspan="6"></td>
         <td class="table-body">所属長承認
-        <% unless @approver == nil? %>
-          <% @approver.each do |approver| %>
-            <% if approver.monthly_confirmation_status == 1 %>
-              <%= User.find(approver.monthly_confirmation_approver_id).name %>へ申請中
-            <% elsif approver.monthly_confirmation_status == 2 %>
-              <%= User.find(approver.monthly_confirmation_approver_id).name %>から承認済
-            <% elsif approver.monthly_confirmation_status == 3 %>
-              <%= User.find(approver.monthly_confirmation_approver_id).name %>から否認
+          <% unless @approver == nil %>
+            <% if @approver.monthly_confirmation_status == 1 %>
+              <%= User.find(@approver.monthly_confirmation_approver_id).name %>へ申請中
+            <% elsif @approver.monthly_confirmation_status == 2 %>
+              <%= User.find(@approver.monthly_confirmation_approver_id).name %>から承認済
+            <% elsif @approver.monthly_confirmation_status == 3 %>
+              <%= User.find(@approver.monthly_confirmation_approver_id).name %>から否認
+            <% else %>
+              未
             <% end %>
           <% end %>
-          　未
-        <% end %>
           <% if current_user?(@user) %>
-            <%= form_with model: @user, url: attendances_monthly_confirmation_user_path(@user), method: :patch do |ma| %>
+            <%= form_with model: @attendances, url: monthly_confirmation_user_attendances_path(@user), method: :patch do |ma| %>
               <%= ma.collection_select :monthly_confirmation_approver_id, @superiors, :id, :name, {include_blank: true} %>
-              <!--< %= #ma.hidden_field :date, @first_day %>-->
+              <%= ma.hidden_field :date, :value => @first_day %>
               <!--< %= #ma.hidden_field :user_id, @user.id %>-->
               <%= ma.submit "申請", class: "btn btn-primary btn-block btn-sm" %>
             <% end %>
@@ -200,3 +224,4 @@
     </tfoot>    
   </table>
 </div>
+<div id="apply-overtime-form-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true"></div>

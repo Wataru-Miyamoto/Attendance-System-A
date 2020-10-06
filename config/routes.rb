@@ -28,14 +28,6 @@ Rails.application.routes.draw do
       patch 'attendances/update_one_month'
       get   'search'
       
-      #上長画面一ヶ月分勤怠申請のお知らせフォーム
-      get   'attendances/monthly_confirmation_form'
-      post  'attendances/monthly_confirmation_form'
-  
-      #一ヶ月分の申請
-      patch 'attendances/monthly_confirmation'
-      patch 'attendances/monthly_update'
-      
       get   'attendances/change_confirmation'
       post  'attendances/change_confirmation'
       patch 'attendances/change_confirmation'
@@ -43,22 +35,36 @@ Rails.application.routes.draw do
       get   'attendances/change_confirmation_form'
       post  'attendances/change_confirmation_form'
       
-      #残業申請
-      get   'attendances/update_overtime'
-      post  'attendances/update_overtime'
-      patch 'attendances/update_overtime'
-      
-      #残業申請のお知らせフォーム
-      get   'attendances/update_overtime_form'
-      post  'attendances/update_overtime_form'
-      
       get   'attendances/index'
       post  'attendances/index'
       patch 'attendances/index'
       
     end
-    resources :attendances, only: :update
+    resources :attendances, only: :update do
+      member do
+        #残業申請送信フォーム
+        get   'apply_overtime_form'
+  
+        #残業申請
+        patch 'apply_overtime'
+        
+        #残業申請のお知らせフォーム
+        get   'update_overtime_form'
+        
+        #残業承認
+        patch 'update_overtime'
+        
+      end
+      collection do
+        #一ヶ月分の申請
+        patch 'monthly_confirmation'
+
+        #上長画面一ヶ月分勤怠申請のお知らせフォーム
+        get   'monthly_confirmation_form'
+        patch 'monthly_update'
+      end
     end
     resources :bases do
+    end
   end
 end

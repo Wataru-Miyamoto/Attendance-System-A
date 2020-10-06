@@ -32,4 +32,8 @@ module AttendancesHelper
     format("%.2f", (((finish - start) / 60) / 60.0))
   end
   
+  def overtimes(overtime, finish)
+    format("%.2f", ((overtime.hour - finish.hour) + (overtime.min - finish.min) / 60.0))
+  end
+  
 end

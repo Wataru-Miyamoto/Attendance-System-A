@@ -192,6 +192,15 @@ class AttendancesController < ApplicationController
     redirect_to user_url(current_user.id)
   end
   
+   def csv_output
+    user = User.find(params[:user_id])
+    @first_day = params[:date].nil? ? Date.current.beginning_of_month : params[:date].to_date
+    @last_day = @first_day.end_of_month
+    @attendances = user.attendances.where(worked_on: @first_day..@last_day).order(:worked_on)
+    # @attendance = Attendance.joins(:user).where(id: Attendance.where(worked_on: @first_day..@last_day).where(user_id: current_user))
+    send_data render_to_string, filename: "attendances.csv", type: :csv
+   end
+  
   
   private
   

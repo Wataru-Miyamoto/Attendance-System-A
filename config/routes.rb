@@ -62,6 +62,8 @@ Rails.application.routes.draw do
         #上長画面一ヶ月分勤怠申請のお知らせフォーム
         get   'monthly_confirmation_form'
         patch 'monthly_update'
+        
+        get   'csv_output'
       end
     end
     resources :bases do

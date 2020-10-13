@@ -31,7 +31,7 @@ class AttendancesController < ApplicationController
     if @user.superior == true
       @change_confirmation_count = Attendance.where(change_confirmation_approver_id: @user.id, change_confirmation_status: "pending").count
     end
-    time.finished_at.day + 1 if [:tomorrow_check] == "1"
+    time.edit_finished_at.day + 1 if [:tomorrow_check] == "1"
   end
   
   def change_confirmation
@@ -40,10 +40,22 @@ class AttendancesController < ApplicationController
         if item[:change_confirmation_approver_id].present?
           if item[:note].blank?
             flash[:danger] = "備考を入力してください。"
-            redirect_to attendances_edit_one_month_user_url(date: params[:date])
+            redirect_to attendances_edit_one_month_user_url(date: params[:date]) and return
           elsif item["edit_started_at(4i)"].blank? || item["edit_started_at(5i)"].blank? || item["edit_finished_at(4i)"].blank? || item["edit_finished_at(5i)"].blank?
             flash[:danger] = "変更申請したい時間を入力してください。"
-            redirect_to attendances_edit_one_month_user_url(date: params[:date])
+            redirect_to attendances_edit_one_month_user_url(date: params[:date]) and return
+          else
+            unless item[:tomorrow_check] == "1"
+              if (item["edit_started_at(4i)"] > item["edit_finished_at(4i)"]) || 
+                 ((item["edit_started_at(4i)"] == item["edit_finished_at(4i)"]) && (item["edit_started_at(5i)"] > item["edit_finished_at(5i)"]))
+                 flash[:danger] = "出勤時間より早い退勤時間は無効です。"
+                 redirect_to attendances_edit_one_month_user_url(date: params[:date]) and return
+            #if item[:edit_started_at].present? && item[:edit_finished_at].present?
+              #if item[:edit_started_at] > item[:edit_finished_at]
+                #flash[:danger] = "出勤時間より早い退勤時間は無効です。"
+                #redirect_to attendances_edit_one_month_user_url(date: params[:date]) and return
+              end
+            end
           end
           item[:change_confirmation_status] = "1"
           attendance = Attendance.find(id)
@@ -51,7 +63,7 @@ class AttendancesController < ApplicationController
         end
       end
       flash[:success] = "勤怠変更の申請を送信しました。"
-      redirect_to user_url(current_user)
+      redirect_to user_url(current_user) and return
     end
   rescue ActiveRecord::RecordInvalid
     flash[:danger] = "無効な入力データがあった為、申請をキャンセルしました。"
@@ -140,7 +152,7 @@ class AttendancesController < ApplicationController
     @attendance = Attendance.find(params[:id])
     @user = User.find(params[:user_id])
     @superiors = User.where(superior: true).where.not(id: current_user.id)
-    time.finished_at.day + 1 if [:tomorrow_check] == "1"
+    time.overtime.day + 1 if [:tomorrow_check] == "1"
   end
   
   def apply_overtime
@@ -197,7 +209,6 @@ class AttendancesController < ApplicationController
     @first_day = params[:date].nil? ? Date.current.beginning_of_month : params[:date].to_date
     @last_day = @first_day.end_of_month
     @attendances = user.attendances.where(worked_on: @first_day..@last_day).order(:worked_on)
-    # @attendance = Attendance.joins(:user).where(id: Attendance.where(worked_on: @first_day..@last_day).where(user_id: current_user))
     send_data render_to_string, filename: "attendances.csv", type: :csv
    end
   

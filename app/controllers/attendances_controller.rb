@@ -152,7 +152,6 @@ class AttendancesController < ApplicationController
     @attendance = Attendance.find(params[:id])
     @user = User.find(params[:user_id])
     @superiors = User.where(superior: true).where.not(id: current_user.id)
-    time.overtime.day + 1 if [:tomorrow_check] == "1"
   end
   
   def apply_overtime
@@ -169,8 +168,12 @@ class AttendancesController < ApplicationController
         flash[:danger] = "退社ボタンを押下するか、勤怠変更申請にて終了予定時間を申請してください。"
         redirect_to user_url(@user) and return
       end
+      params["overtime(3i)"] + 1 if params[:tomorrow_check] == "1"
       params[:attendance][:overwork_status] = "1"
-      attendance.update_attributes(apply_overtime_params)
+      attendance.update_attributes!(apply_overtime_params)
+    else
+      flash[:danger] = "申請先を入力してください"
+      redirect_to user_url(current_user) and return
     end
     flash[:success] = "残業申請を送信しました。"
     redirect_to user_url(@user) and return

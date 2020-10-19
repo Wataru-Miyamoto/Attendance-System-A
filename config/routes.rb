@@ -66,7 +66,7 @@ Rails.application.routes.draw do
         get   'csv_output'
       end
     end
-    resources :bases do
-    end
   end
+  
+  resources :bases
 end

@@ -23,7 +23,7 @@
                 <!--曜日-->
                 <td class="center"><%= $days_of_the_week[@attendance.worked_on.wday] %></td>
                 <td class="center"><%= f.time_select :overtime, {include_blank: true}, class: "form-control bootstrap-date" %></td>
-                <td class="center"><%= f.check_box :tomorrow_check, {:checked => false}, 0 %></td>
+                <td class="center"><%= f.check_box :tomorrow_check, {:checked => false}, 1 %></td>
                 <td class="center"><%= f.text_field :task_memo, class: "form-control" %></td>
                 <td class="center"><%= f.collection_select :overwork_approver_id, @superiors, :id, :name, {include_blank: true} %></td>
                 <!--< %= f.hidden_field :user_id, @user.id %>-->

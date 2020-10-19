@@ -40,7 +40,7 @@
                 <td><%= attendance.time_select :edit_started_at, {include_blank: true}, class: "form-control bootstrap-date" %></td>
                 <td><%= attendance.time_select :edit_finished_at, {include_blank: true}, class: "form-control bootstrap-date" %></td>
               <% end %> 
-              <td><%= attendance.check_box :tomorrow_check, {:checked => false}, 0 %></td>
+              <td><%= attendance.check_box :tomorrow_check, {:checked => false}, 1 %></td>
               <td>
                 <% if day.started_at.present? && day.finished_at.present? %>
                   <%= format("%.2f", working_times(day.changed_started_at ||= 0, day.changed_finished_at ||= 0)) %>

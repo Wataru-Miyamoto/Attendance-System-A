@@ -179,7 +179,7 @@
             <% end %>
             <% unless day.overwork_status == nil? %>
               <% if day.overwork_status == 1 %>
-                <%= User.find(day.overwork_approver_id).name %>へ残業申���中
+                <%= User.find(day.overwork_approver_id).name %>へ残業申請中
               <% elsif day.overwork_status == 2 %>
                 <%= User.find(day.overwork_approver_id).name %>より残業承認済
               <% elsif day.overwork_status == 3 %>

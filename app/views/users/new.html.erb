@@ -5,6 +5,48 @@
 
 <div class="row">
   <div class="col-md-6 col-md-offset-3">
-    <%= render 'form' %>
+    <% if @user.errors.any? %>
+      <div id="error_explanation">
+        <div class="alert alert-danger">
+          入力エラーが<%= @user.errors.count %>件ありました。
+        </div>
+        <ul>
+        <% @user.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+        </ul>
+      </div>
+    <% end %>
+    <%= form_with model: @user, url: users_path(@user), local: true, method: :post do |f| %>
+
+      <%= f.label "名前", class: "label-#{yield(:class_text)}" %>
+      <%= f.text_field :name, class: "form-control" %>
+      
+      <%= f.label "メールアドレス", class: "label-#{yield(:class_text)}" %>
+      <%= f.email_field :email, class: "form-control" %>
+      
+      <%= f.label "所属", class: "label-#{yield(:class_text)}" %>
+      <%= f.text_field :affiliation, class: "form-control" %>
+      
+      <%= f.label "社員番号", class: "label-#{yield(:class_text)}" %>
+      <%= f.text_field :employee_number, class: "form-control" %>
+      
+      <%= f.label "カードID", class: "label-#{yield(:class_text)}" %>
+      <%= f.text_field :uid, class: "form-control" %>
+      
+      <%= f.label "パスワード", class: "label-#{yield(:class_text)}" %>
+      <%= f.password_field :password, class: "form-control" %>
+      
+      <%= f.label "基本勤務時間", class: "label-#{yield(:class_text)}" %>
+      <%= f.time_select :basic_time, class: "form-control" %>
+      
+      <%= f.label "指定勤務開始時間", class: "label-#{yield(:class_text)}" %>
+      <%= f.time_select :designated_work_start_time, class: "form-control" %>
+      
+      <%= f.label "指定勤務終了時間", class: "label-#{yield(:class_text)}" %>
+      <%= f.time_select :designated_work_end_time, class: "form-control" %>
+      
+      <%= f.submit "新規作成", class: "btn btn-primary btn-block btn-signup btn-#{yield(:button_text)}" %>
+    <% end %>
   </div>
 </div>

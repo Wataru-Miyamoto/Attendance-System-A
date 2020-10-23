@@ -4,7 +4,7 @@
       <div id="black">
         <% @attendances.each do |user_id, attendance| %>
           <% user = User.find(user_id) %>
-          <h2><%= user.name %>からの残業申請</h2>
+          <h2><%= user.name %>からの所属長承認申請</h2>
           <%= form_with model: @user, url: monthly_update_user_attendances_path, local: true, method: :patch do |f| %>
             <% attendance.each do |a| %>
               <%= f.fields_for "attendances[]", a do |attendances| %>
